@@ -15,14 +15,11 @@ RUN apt-get install -y --force-yes \
     zip \
     zlib1g-dev
 
-RUN pecl install xdebug
-
 RUN docker-php-ext-install \
     pdo \
     pdo_mysql \
     soap \
-    zip \
-    && docker-php-ext-enable xdebug
+    zip
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg &&  \
     docker-php-ext-install gd
@@ -43,8 +40,6 @@ RUN composer global require laravel/installer
 RUN curl -L https://cs.symfony.com/download/php-cs-fixer-v3.phar -o php-cs-fixer && \
     chmod a+x php-cs-fixer && \
     mv php-cs-fixer /usr/local/bin/php-cs-fixer
-
-COPY ./xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
 COPY ./ssh-keys /root/.ssh
 RUN chmod 600 /root/.ssh/id_rsa

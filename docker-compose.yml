@@ -24,7 +24,16 @@ services:
     container_name: phpfpm85-2026
     build: ./docker/builds/phpfpm85
     volumes:
-      - ./backend:/var/www/html/backend
+      - ./:/var/www/html/
+    working_dir: /var/www/html/backend
+    links:
+      - mariadb-2026
+
+  phpfpm85-2026-command:
+    container_name: phpfpm85-2026-command
+    build: ./docker/builds/phpfpm85-command
+    volumes:
+      - ./:/var/www/html/
     working_dir: /var/www/html/backend
     links:
       - mariadb-2026
