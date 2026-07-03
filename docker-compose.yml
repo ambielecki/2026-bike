@@ -1,0 +1,10 @@
+services:
+  nginx-proxy-2026:
+    container_name: nginx-proxy-2026
+    build: ./docker/builds/nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./certs:/etc/nginx/certs
