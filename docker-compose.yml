@@ -8,3 +8,35 @@ services:
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./certs:/etc/nginx/certs
+
+  backend-2026:
+    container_name: backend-2026
+    build: ./docker/builds/backend-2026
+    environment:
+      - VIRTUAL_HOST=api.bike.test
+    volumes:
+      - ./backend:/var/www/html/backend
+    working_dir: /var/www/html/backend
+    depends_on:
+      - phpfpm85-2026
+
+  phpfpm85-2026:
+    container_name: phpfpm85-2026
+    build: ./docker/builds/phpfpm85
+    volumes:
+      - ./backend:/var/www/html/backend
+    working_dir: /var/www/html/backend
+    links:
+      - mariadb-2026
+
+  mariadb-2026:
+    image: mariadb:12.3.2
+    container_name: mariadb-2026
+    ports:
+      - "33061:3306"
+    volumes:
+      - ./db-data:/var/lib/mysql
+      - ./dumps:/var/lib/mysql/dumps
+    working_dir: /var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
