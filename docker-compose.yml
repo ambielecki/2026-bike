@@ -1,22 +1,22 @@
 services:
-  nginx-proxy-2026:
-    container_name: nginx-proxy-2026
-    build: ./docker/builds/nginx-proxy
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./certs:/etc/nginx/certs
+#  nginx-proxy-2026:
+#    container_name: nginx-proxy-2026
+#    build: ./docker/builds/nginx-proxy
+#    ports:
+#      - "80:80"
+#      - "443:443"
+#    volumes:
+#      - /var/run/docker.sock:/tmp/docker.sock:ro
+#      - ./certs:/etc/nginx/certs
 
   backend-2026:
     container_name: backend-2026
     build: ./docker/builds/backend-2026
-    environment:
-      - VIRTUAL_HOST=api.bike.test
     volumes:
       - ./backend:/var/www/html/backend
     working_dir: /var/www/html/backend
+    ports:
+      - "8080:80"
     depends_on:
       - phpfpm85-2026
 
