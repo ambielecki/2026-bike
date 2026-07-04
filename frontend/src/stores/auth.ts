@@ -85,7 +85,12 @@ export const useAuthStore = defineStore('auth', () => {
     currentUser.value = null
   }
 
+  function clearCurrentUser() {
+    currentUser.value = null
+  }
+
   return {
+    clearCurrentUser,
     currentUser,
     isAdmin,
     isAuthenticated,

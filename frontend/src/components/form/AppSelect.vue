@@ -3,20 +3,15 @@ const model = defineModel<string>({ required: true })
 
 const props = withDefaults(
   defineProps<{
-    autocomplete?: string
     error?: string
     id: string
-    inputmode?: 'decimal' | 'email' | 'numeric' | 'search' | 'tel' | 'text' | 'url'
     label: string
-    readonly?: boolean
-    type?: string
+    options: Array<{ label: string; value: string }>
+    placeholder?: string
   }>(),
   {
-    autocomplete: undefined,
     error: '',
-    inputmode: undefined,
-    readonly: false,
-    type: 'text',
+    placeholder: 'Select an option',
   },
 )
 </script>
@@ -24,16 +19,17 @@ const props = withDefaults(
 <template>
   <div class="field">
     <label :for="props.id">{{ props.label }}</label>
-    <input
+    <select
       :id="props.id"
       v-model="model"
       :aria-describedby="props.error ? `${props.id}-error` : undefined"
       :aria-invalid="props.error ? 'true' : 'false'"
-      :autocomplete="props.autocomplete"
-      :inputmode="props.inputmode"
-      :readonly="props.readonly"
-      :type="props.type"
-    />
+    >
+      <option value="">{{ props.placeholder }}</option>
+      <option v-for="option in props.options" :key="option.value" :value="option.value">
+        {{ option.label }}
+      </option>
+    </select>
     <p v-if="props.error" :id="`${props.id}-error`" class="field-error">
       {{ props.error }}
     </p>
@@ -52,7 +48,7 @@ label {
   font-weight: 700;
 }
 
-input {
+select {
   background: #ffffff;
   border: 0.0625rem solid rgba(53, 94, 59, 0.22);
   border-radius: 0.375rem;
@@ -63,17 +59,13 @@ input {
   width: 100%;
 }
 
-input:focus {
+select:focus {
   border-color: #355e3b;
   outline: 0.1875rem solid rgba(53, 94, 59, 0.18);
 }
 
-input[aria-invalid='true'] {
+select[aria-invalid='true'] {
   border-color: #b02c2c;
-}
-
-input[readonly] {
-  background: rgba(53, 94, 59, 0.06);
 }
 
 .field-error {

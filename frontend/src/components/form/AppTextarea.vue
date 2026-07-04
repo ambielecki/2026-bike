@@ -3,20 +3,14 @@ const model = defineModel<string>({ required: true })
 
 const props = withDefaults(
   defineProps<{
-    autocomplete?: string
     error?: string
     id: string
-    inputmode?: 'decimal' | 'email' | 'numeric' | 'search' | 'tel' | 'text' | 'url'
     label: string
-    readonly?: boolean
-    type?: string
+    rows?: number
   }>(),
   {
-    autocomplete: undefined,
     error: '',
-    inputmode: undefined,
-    readonly: false,
-    type: 'text',
+    rows: 4,
   },
 )
 </script>
@@ -24,16 +18,13 @@ const props = withDefaults(
 <template>
   <div class="field">
     <label :for="props.id">{{ props.label }}</label>
-    <input
+    <textarea
       :id="props.id"
       v-model="model"
       :aria-describedby="props.error ? `${props.id}-error` : undefined"
       :aria-invalid="props.error ? 'true' : 'false'"
-      :autocomplete="props.autocomplete"
-      :inputmode="props.inputmode"
-      :readonly="props.readonly"
-      :type="props.type"
-    />
+      :rows="props.rows"
+    ></textarea>
     <p v-if="props.error" :id="`${props.id}-error`" class="field-error">
       {{ props.error }}
     </p>
@@ -52,28 +43,25 @@ label {
   font-weight: 700;
 }
 
-input {
+textarea {
   background: #ffffff;
   border: 0.0625rem solid rgba(53, 94, 59, 0.22);
   border-radius: 0.375rem;
   color: #142013;
   font: inherit;
-  min-height: 2.875rem;
-  padding: 0 0.75rem;
+  min-height: 7.5rem;
+  padding: 0.75rem;
+  resize: vertical;
   width: 100%;
 }
 
-input:focus {
+textarea:focus {
   border-color: #355e3b;
   outline: 0.1875rem solid rgba(53, 94, 59, 0.18);
 }
 
-input[aria-invalid='true'] {
+textarea[aria-invalid='true'] {
   border-color: #b02c2c;
-}
-
-input[readonly] {
-  background: rgba(53, 94, 59, 0.06);
 }
 
 .field-error {

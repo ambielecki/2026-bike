@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { setActivePinia } from 'pinia'
 
 import { pinia } from '@/plugins/pinia'
+import router from '@/router'
 import { ApiError, api } from '@/services/api'
+import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toasts'
 
 describe('api service', () => {
@@ -244,5 +246,39 @@ describe('api service', () => {
         method: 'GET',
       }),
     )
+  })
+
+  it('clears the current user, redirects to login, and shows a warning toast for unauthenticated responses', async () => {
+    const authStore = useAuthStore()
+    const routerPushSpy = vi.spyOn(router, 'push').mockResolvedValue()
+
+    authStore.currentUser = {
+      id: 1,
+      name: 'Rider',
+      email: 'rider@example.com',
+      is_admin: false,
+    }
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ message: 'Unauthenticated.' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ),
+    )
+
+    await expect(api.get('/api/rides')).rejects.toMatchObject({
+      status: 401,
+      message: 'Unauthenticated.',
+    })
+
+    expect(authStore.currentUser).toBeNull()
+    expect(routerPushSpy).toHaveBeenCalledWith({ name: 'login' })
+
+    const [toast] = useToastStore().toasts
+    expect(toast?.variant).toBe('warning')
+    expect(toast?.message).toBe('Please Login')
   })
 })

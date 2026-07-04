@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import AddRideView from '@/views/AddRideView.vue'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
 import PlaceholderView from '@/views/PlaceholderView.vue'
@@ -23,10 +24,7 @@ const router = createRouter({
     {
       path: '/rides/add',
       name: 'add-ride',
-      component: PlaceholderView,
-      props: {
-        title: 'Add Ride',
-      },
+      component: AddRideView,
     },
     {
       path: '/admin',

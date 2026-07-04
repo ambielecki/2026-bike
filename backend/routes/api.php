@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\LocationController;
+use App\Http\Controllers\RideController;
 use App\Http\Controllers\TestHelperController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
@@ -14,6 +16,12 @@ Route::get('/health', function () {
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/locations', [LocationController::class, 'index']);
+    Route::post('/locations', [LocationController::class, 'store']);
+    Route::post('/rides', [RideController::class, 'store']);
+});
 
 if (strcasecmp((string) Config::get('app.env'), 'production') !== 0) {
     Route::prefix('test-errors')->group(function () {

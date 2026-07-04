@@ -59,6 +59,11 @@ async function sendRequest<T>(
 
   if (!response.ok) {
     const errorData = await parseJson<ApiErrorResponse>(response)
+
+    if (response.status === 401) {
+      await handleUnauthenticatedResponse()
+    }
+
     handleErrorToast(response.status, errorData, options)
 
     throw new ApiError(response.status, errorData?.message ?? response.statusText, errorData)
@@ -216,6 +221,10 @@ function handleErrorToast(
 ) {
   const toastStore = useToastStore(pinia)
 
+  if (status === 401) {
+    return
+  }
+
   if (status >= 500) {
     toastStore.error(DEFAULT_SERVER_ERROR_MESSAGE, 'Server error')
     return
@@ -237,6 +246,22 @@ function handleErrorToast(
   }
 
   toastStore.warning(data?.message ?? 'Request failed.', 'Request issue')
+}
+
+async function handleUnauthenticatedResponse() {
+  const [{ useAuthStore }, { default: router }] = await Promise.all([
+    import('@/stores/auth'),
+    import('@/router'),
+  ])
+  const authStore = useAuthStore(pinia)
+  const toastStore = useToastStore(pinia)
+
+  authStore.clearCurrentUser()
+  toastStore.warning('Please Login')
+
+  if (router.currentRoute.value.name !== 'login') {
+    await router.push({ name: 'login' })
+  }
 }
 
 function collectValidationMessages(data: ApiErrorResponse | null) {

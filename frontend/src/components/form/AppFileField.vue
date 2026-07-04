@@ -1,24 +1,26 @@
 <script setup lang="ts">
-const model = defineModel<string>({ required: true })
+const emit = defineEmits<{
+  change: [file: File | null]
+}>()
 
 const props = withDefaults(
   defineProps<{
-    autocomplete?: string
+    accept?: string
     error?: string
     id: string
-    inputmode?: 'decimal' | 'email' | 'numeric' | 'search' | 'tel' | 'text' | 'url'
     label: string
-    readonly?: boolean
-    type?: string
   }>(),
   {
-    autocomplete: undefined,
+    accept: undefined,
     error: '',
-    inputmode: undefined,
-    readonly: false,
-    type: 'text',
   },
 )
+
+function fileChanged(event: Event) {
+  const input = event.target as HTMLInputElement
+
+  emit('change', input.files?.[0] ?? null)
+}
 </script>
 
 <template>
@@ -26,13 +28,11 @@ const props = withDefaults(
     <label :for="props.id">{{ props.label }}</label>
     <input
       :id="props.id"
-      v-model="model"
+      :accept="props.accept"
       :aria-describedby="props.error ? `${props.id}-error` : undefined"
       :aria-invalid="props.error ? 'true' : 'false'"
-      :autocomplete="props.autocomplete"
-      :inputmode="props.inputmode"
-      :readonly="props.readonly"
-      :type="props.type"
+      type="file"
+      @change="fileChanged"
     />
     <p v-if="props.error" :id="`${props.id}-error`" class="field-error">
       {{ props.error }}
@@ -59,7 +59,7 @@ input {
   color: #142013;
   font: inherit;
   min-height: 2.875rem;
-  padding: 0 0.75rem;
+  padding: 0.625rem 0.75rem;
   width: 100%;
 }
 
@@ -70,10 +70,6 @@ input:focus {
 
 input[aria-invalid='true'] {
   border-color: #b02c2c;
-}
-
-input[readonly] {
-  background: rgba(53, 94, 59, 0.06);
 }
 
 .field-error {

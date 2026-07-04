@@ -11,7 +11,7 @@ This is a PHP 8.5 Laravel 13 API
     - Example: `docker exec -it phpfpm85-2026-command php artisan migrate`
     - Use Laravel Artisan commands when possible to run migrations, create new migrations, tests, and other files 
     - Create new unit tests and integration tests as needed
-- Use the Playwright Skill as needed for frontend testing and implementation
+- Use the sportlog/fit package for processing FIT files
 
 ## Verification
 - Run tests in the phpfpm85-2026-command docker container by running `docker exec -it phpfpm85-2026-command php artisan test`
