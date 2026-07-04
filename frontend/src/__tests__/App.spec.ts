@@ -1,15 +1,29 @@
-import { describe, it, expect } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from '../App.vue'
 import HomeView from '../views/HomeView.vue'
+import PlaceholderView from '../views/PlaceholderView.vue'
 
 const slotStub = {
   template: '<div><slot /></div>',
 }
 
 describe('App', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ message: 'Unauthenticated.' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ),
+    )
+  })
+
   it('mounts renders properly', async () => {
     const router = createRouter({
       history: createWebHistory(),
@@ -18,6 +32,36 @@ describe('App', () => {
           path: '/',
           name: 'home',
           component: HomeView,
+        },
+        {
+          path: '/rides',
+          name: 'rides',
+          component: PlaceholderView,
+        },
+        {
+          path: '/rides/add',
+          name: 'add-ride',
+          component: PlaceholderView,
+        },
+        {
+          path: '/admin',
+          name: 'admin-tools',
+          component: PlaceholderView,
+        },
+        {
+          path: '/settings',
+          name: 'settings',
+          component: PlaceholderView,
+        },
+        {
+          path: '/register',
+          name: 'register',
+          component: PlaceholderView,
+        },
+        {
+          path: '/login',
+          name: 'login',
+          component: PlaceholderView,
         },
       ],
     })
@@ -44,6 +88,8 @@ describe('App', () => {
 
     expect(wrapper.text()).toContain('Track every mountain bike route worth riding twice.')
     expect(wrapper.text()).toContain('BikeMap')
+    expect(wrapper.text()).toContain('Register')
+    expect(wrapper.text()).toContain('Log In')
     expect(wrapper.text()).toContain('Check API')
   })
 })

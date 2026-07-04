@@ -3,6 +3,7 @@ This is a Vue.js with pinia and vue-router frontend. This repo is using playwrig
 
 ## Procedures
 - All UI development should be accessible, please ensure that all components are accessible to users with disabilities.
+- All UI development should be mobile responsive and work for both desktop and mobile devices.
 - npm v26.x is installed with nvm, use this version for development.
 - The backend api base url is set in VITE_API_URL in .env file.
 - Prefer native JavaScript APIs over third-party libraries when possible.
