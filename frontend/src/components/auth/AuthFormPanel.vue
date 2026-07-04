@@ -26,23 +26,23 @@ defineProps<{
 <style scoped>
 .auth-page {
   background: #f8f6f0;
-  min-height: calc(100vh - 64px);
-  padding: 48px 16px;
+  min-height: calc(100vh - 4rem);
+  padding: 3rem 1rem;
 }
 
 .auth-panel {
   background: #fffdf7;
-  border: 1px solid rgba(53, 94, 59, 0.14);
-  border-radius: 8px;
-  box-shadow: 0 18px 44px rgba(20, 32, 19, 0.09);
+  border: 0.0625rem solid rgba(53, 94, 59, 0.14);
+  border-radius: 0.5rem;
+  box-shadow: 0 1.125rem 2.75rem rgba(20, 32, 19, 0.09);
   margin: 0 auto;
-  max-width: 440px;
-  padding: 32px;
+  max-width: 27.5rem;
+  padding: 2rem;
   width: 100%;
 }
 
 .auth-heading {
-  margin-bottom: 24px;
+  margin-bottom: 1.5rem;
 }
 
 h1 {
@@ -55,16 +55,16 @@ h1 {
 p {
   color: rgba(20, 32, 19, 0.72);
   line-height: 1.6;
-  margin: 10px 0 0;
+  margin: 0.625rem 0 0;
 }
 
 .form-error {
   background: rgba(176, 44, 44, 0.09);
-  border: 1px solid rgba(176, 44, 44, 0.26);
-  border-radius: 6px;
+  border: 0.0625rem solid rgba(176, 44, 44, 0.26);
+  border-radius: 0.375rem;
   color: #7c2020;
   line-height: 1.5;
-  margin-bottom: 18px;
-  padding: 12px 14px;
+  margin-bottom: 1.125rem;
+  padding: 0.75rem 0.875rem;
 }
 </style>

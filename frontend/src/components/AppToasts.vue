@@ -42,31 +42,31 @@ function toastClass(variant: string) {
 
 <style scoped>
 .toast-region {
-  bottom: 20px;
+  bottom: 1.25rem;
   pointer-events: none;
   position: fixed;
-  right: 20px;
-  width: min(360px, calc(100vw - 32px));
+  right: 1.25rem;
+  width: min(22.5rem, calc(100vw - 2rem));
   z-index: 2000;
 }
 
 .toast-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .toast-card {
-  border-left: 6px solid transparent;
+  border-left: 0.375rem solid transparent;
   pointer-events: auto;
 }
 
 .toast-content {
   align-items: flex-start;
   display: flex;
-  gap: 12px;
+  gap: 0.75rem;
   justify-content: space-between;
-  padding: 16px;
+  padding: 1rem;
 }
 
 .toast-text {
@@ -76,7 +76,7 @@ function toastClass(variant: string) {
 .toast-title {
   font-size: 0.95rem;
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: 0.25rem;
 }
 
 .toast-message {
@@ -115,17 +115,17 @@ function toastClass(variant: string) {
 .toast-list-enter-from,
 .toast-list-leave-to {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(0.625rem);
 }
 
 .toast-list-move {
   transition: transform 0.22s ease;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 37.5rem) {
   .toast-region {
-    bottom: 16px;
-    right: 16px;
+    bottom: 1rem;
+    right: 1rem;
   }
 }
 </style>

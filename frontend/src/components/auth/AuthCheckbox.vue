@@ -20,18 +20,18 @@ const props = defineProps<{
   color: #142013;
   cursor: pointer;
   display: inline-flex;
-  gap: 10px;
+  gap: 0.625rem;
   line-height: 1.4;
 }
 
 input {
   accent-color: #355e3b;
-  height: 18px;
-  width: 18px;
+  height: 1.125rem;
+  width: 1.125rem;
 }
 
 input:focus-visible {
-  outline: 3px solid rgba(53, 94, 59, 0.28);
-  outline-offset: 2px;
+  outline: 0.1875rem solid rgba(53, 94, 59, 0.28);
+  outline-offset: 0.125rem;
 }
 </style>

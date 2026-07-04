@@ -70,4 +70,62 @@ describe('auth store', () => {
     expect(authStore.currentUser?.email).toBe('rider@example.com')
     expect(authStore.isAdmin).toBe(true)
   })
+
+  it('registers through Fortify and reloads the current user', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: 2,
+            name: 'New Rider',
+            email: 'new@example.com',
+            is_admin: false,
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        ),
+      )
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const authStore = useAuthStore()
+
+    await authStore.register('New Rider', 'new@example.com', 'password', 'password')
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      'http://api.example.test/register',
+      expect.objectContaining({
+        credentials: 'include',
+        method: 'POST',
+      }),
+    )
+
+    const registerBody = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string) as {
+      name: string
+      email: string
+      password: string
+      password_confirmation: string
+    }
+
+    expect(registerBody).toEqual({
+      name: 'New Rider',
+      email: 'new@example.com',
+      password: 'password',
+      password_confirmation: 'password',
+    })
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      'http://api.example.test/api/user',
+      expect.objectContaining({
+        credentials: 'include',
+      }),
+    )
+    expect(authStore.currentUser?.name).toBe('New Rider')
+  })
 })

@@ -166,7 +166,7 @@ async function triggerServerError() {
 
 .hero-row {
   min-height: 100vh;
-  padding: 48px 0;
+  padding: 3rem 0;
 }
 
 .eyebrow {
@@ -174,7 +174,7 @@ async function triggerServerError() {
   font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
   text-transform: uppercase;
 }
 
@@ -182,7 +182,7 @@ async function triggerServerError() {
   color: #142013;
   font-size: clamp(2.8rem, 6vw, 5.2rem);
   line-height: 1;
-  margin: 0 0 24px;
+  margin: 0 0 1.5rem;
   max-width: 11ch;
 }
 
@@ -197,21 +197,21 @@ async function triggerServerError() {
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 32px;
+  gap: 1rem;
+  margin-top: 2rem;
 }
 
 .toast-demo {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 20px;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
 }
 
 .trail-card {
   background: rgba(253, 251, 246, 0.88);
-  backdrop-filter: blur(12px);
-  padding: 28px;
+  backdrop-filter: blur(0.75rem);
+  padding: 1.75rem;
 }
 
 .card-label {
@@ -219,7 +219,7 @@ async function triggerServerError() {
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
   text-transform: uppercase;
 }
 
@@ -228,7 +228,7 @@ async function triggerServerError() {
   font-size: 1.75rem;
   font-weight: 700;
   line-height: 1.2;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
 }
 
 .card-copy {
@@ -239,19 +239,19 @@ async function triggerServerError() {
 
 .metric-list {
   display: grid;
-  gap: 14px;
+  gap: 0.875rem;
 }
 
 .metric {
-  border: 1px solid rgba(53, 94, 59, 0.12);
-  padding: 16px;
+  border: 0.0625rem solid rgba(53, 94, 59, 0.12);
+  padding: 1rem;
 }
 
 .metric-value {
   color: #1f3523;
   font-size: 1rem;
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 0.375rem;
 }
 
 .metric-text {
@@ -261,19 +261,19 @@ async function triggerServerError() {
 
 .highlights {
   background: #f8f6f0;
-  padding: 32px 0 64px;
+  padding: 2rem 0 4rem;
 }
 
 .feature-card {
   background: #eef3e8;
-  padding: 24px;
+  padding: 1.5rem;
 }
 
 .feature-title {
   color: #1f3523;
   font-size: 1.2rem;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
 }
 
 .feature-copy {
@@ -282,10 +282,10 @@ async function triggerServerError() {
   margin: 0;
 }
 
-@media (max-width: 959px) {
+@media (max-width: 59.9375rem) {
   .hero-row {
     min-height: auto;
-    padding: 32px 0 48px;
+    padding: 2rem 0 3rem;
   }
 
   .headline {

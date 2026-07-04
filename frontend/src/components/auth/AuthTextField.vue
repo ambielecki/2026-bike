@@ -40,7 +40,7 @@ const props = withDefaults(
 <style scoped>
 .field {
   display: grid;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 label {
@@ -51,18 +51,18 @@ label {
 
 input {
   background: #ffffff;
-  border: 1px solid rgba(53, 94, 59, 0.22);
-  border-radius: 6px;
+  border: 0.0625rem solid rgba(53, 94, 59, 0.22);
+  border-radius: 0.375rem;
   color: #142013;
   font: inherit;
-  min-height: 46px;
-  padding: 0 12px;
+  min-height: 2.875rem;
+  padding: 0 0.75rem;
   width: 100%;
 }
 
 input:focus {
   border-color: #355e3b;
-  outline: 3px solid rgba(53, 94, 59, 0.18);
+  outline: 0.1875rem solid rgba(53, 94, 59, 0.18);
 }
 
 input[aria-invalid='true'] {

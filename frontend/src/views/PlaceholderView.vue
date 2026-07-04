@@ -15,8 +15,8 @@ defineProps<{
 <style scoped>
 .placeholder-page {
   background: #f8f6f0;
-  min-height: calc(100vh - 64px);
-  padding: 64px 0;
+  min-height: calc(100vh - 4rem);
+  padding: 4rem 0;
 }
 
 h1 {

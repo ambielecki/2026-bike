@@ -150,19 +150,19 @@ function validatePassword() {
 <style scoped>
 .login-form {
   display: grid;
-  gap: 18px;
+  gap: 1.125rem;
 }
 
 .primary-action {
   background: #355e3b;
   border: 0;
-  border-radius: 6px;
+  border-radius: 0.375rem;
   color: #ffffff;
   cursor: pointer;
   font: inherit;
   font-weight: 700;
-  min-height: 46px;
-  padding: 0 16px;
+  min-height: 2.875rem;
+  padding: 0 1rem;
 }
 
 .primary-action:disabled {
@@ -172,8 +172,8 @@ function validatePassword() {
 
 .primary-action:focus-visible,
 .link-action:focus-visible {
-  outline: 3px solid rgba(53, 94, 59, 0.28);
-  outline-offset: 2px;
+  outline: 0.1875rem solid rgba(53, 94, 59, 0.28);
+  outline-offset: 0.125rem;
 }
 
 .primary-action:hover:not(:disabled) {

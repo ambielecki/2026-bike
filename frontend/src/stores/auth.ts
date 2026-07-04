@@ -27,6 +27,22 @@ export const useAuthStore = defineStore('auth', () => {
     await loadCurrentUser()
   }
 
+  async function register(
+    name: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string,
+  ) {
+    await api.post<void>('/register', {
+      name,
+      email,
+      password,
+      password_confirmation: passwordConfirmation,
+    })
+
+    await loadCurrentUser()
+  }
+
   async function loadCurrentUser() {
     if (isLoading.value) {
       return
@@ -77,6 +93,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     loadCurrentUser,
     logout,
+    register,
   }
 })
 
