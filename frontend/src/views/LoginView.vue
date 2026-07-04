@@ -7,9 +7,11 @@ import AuthFormPanel from '@/components/auth/AuthFormPanel.vue'
 import AuthTextField from '@/components/auth/AuthTextField.vue'
 import { ApiError } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
+import { useToastStore } from '@/stores/toasts'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const toastStore = useToastStore()
 
 const email = ref('')
 const password = ref('')
@@ -63,6 +65,7 @@ async function submitLogin() {
 
   try {
     await authStore.login(email.value.trim(), password.value, rememberMe.value)
+    toastStore.success('Welcome Back to BikeMap')
     await router.push({ name: 'rides' })
   } catch (error) {
     formError.value = error instanceof ApiError ? error.message : 'Unable to log in.'

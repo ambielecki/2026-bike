@@ -5,6 +5,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import { ApiError } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
+import { useToastStore } from '@/stores/toasts'
 import LoginView from '@/views/LoginView.vue'
 import PlaceholderView from '@/views/PlaceholderView.vue'
 
@@ -40,6 +41,7 @@ async function mountLoginView() {
   return {
     authStore: useAuthStore(),
     router,
+    toastStore: useToastStore(),
     wrapper,
   }
 }
@@ -88,7 +90,7 @@ describe('LoginView', () => {
   })
 
   it('submits login and redirects to rides', async () => {
-    const { authStore, router, wrapper } = await mountLoginView()
+    const { authStore, router, toastStore, wrapper } = await mountLoginView()
     const loginSpy = vi.spyOn(authStore, 'login').mockResolvedValue()
 
     await wrapper.find('#login-email').setValue('rider@example.com')
@@ -98,6 +100,7 @@ describe('LoginView', () => {
     await flushPromises()
 
     expect(loginSpy).toHaveBeenCalledWith('rider@example.com', 'password', false)
+    expect(toastStore.toasts[0]?.message).toBe('Welcome Back to BikeMap')
     expect(router.currentRoute.value.name).toBe('rides')
   })
 

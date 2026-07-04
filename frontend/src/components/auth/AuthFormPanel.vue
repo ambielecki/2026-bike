@@ -25,9 +25,7 @@ defineProps<{
 
 <style scoped>
 .auth-page {
-  align-items: center;
   background: #f8f6f0;
-  display: flex;
   min-height: calc(100vh - 64px);
   padding: 48px 16px;
 }

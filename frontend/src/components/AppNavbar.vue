@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
+import { useToastStore } from '@/stores/toasts'
 
 const authStore = useAuthStore()
+const router = useRouter()
+const toastStore = useToastStore()
 
 onMounted(() => {
   void authStore.loadCurrentUser()
@@ -11,6 +15,8 @@ onMounted(() => {
 
 async function logOut() {
   await authStore.logout()
+  toastStore.success('Successfully Logged Out')
+  await router.push({ name: 'home' })
 }
 </script>
 

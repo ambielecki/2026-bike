@@ -7,6 +7,7 @@ This is a Vue.js with pinia and vue-router frontend. This repo is using playwrig
 - npm v26.x is installed with nvm, use this version for development.
 - The backend api base url is set in VITE_API_URL in .env file.
 - Prefer native JavaScript APIs over third-party libraries when possible.
+- Single-card pages, such as log in and follow-on authenticated views, should sit below the navbar with standard page padding. Do not vertically center a lone card in the viewport.
 
 ## API Endpoints
 - `GET /api/health`

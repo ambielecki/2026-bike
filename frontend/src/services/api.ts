@@ -26,9 +26,18 @@ const DEFAULT_SERVER_ERROR_MESSAGE = 'Something went wrong.'
 let xsrfToken: string | null = null
 
 async function request<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  if (isMutationMethod(options.method)) {
-    await ensureCsrfCookie()
-  }
+  return sendRequest<T>(path, options, false, null)
+}
+
+async function sendRequest<T>(
+  path: string,
+  options: ApiRequestOptions,
+  hasRetriedCsrf: boolean,
+  refreshedCsrfToken: string | null,
+): Promise<T> {
+  const csrfToken = isMutationMethod(options.method)
+    ? (refreshedCsrfToken ?? await ensureCsrfCookie())
+    : null
 
   const response = await fetch(buildUrl(path), {
     credentials: 'include',
@@ -36,11 +45,17 @@ async function request<T>(path: string, options: ApiRequestOptions = {}): Promis
     headers: mergeHeaders(
       {
         Accept: 'application/json',
-        ...(csrfHeader(options.method) ?? {}),
+        ...(csrfHeader(options.method, csrfToken) ?? {}),
       },
       options.headers,
     ),
   })
+
+  if (shouldRetryWithFreshCsrf(response, options, hasRetriedCsrf)) {
+    const freshCsrfToken = await refreshCsrfCookie()
+
+    return sendRequest<T>(path, options, true, freshCsrfToken)
+  }
 
   if (!response.ok) {
     const errorData = await parseJson<ApiErrorResponse>(response)
@@ -117,9 +132,17 @@ function apiBaseUrl() {
 }
 
 async function ensureCsrfCookie() {
-  if (resolveXsrfToken()) {
-    return
+  const token = resolveXsrfToken()
+
+  if (token) {
+    return token
   }
+
+  return refreshCsrfCookie()
+}
+
+async function refreshCsrfCookie() {
+  xsrfToken = null
 
   const response = await fetch(`${apiBaseUrl()}/sanctum/csrf-cookie`, {
     credentials: 'include',
@@ -135,7 +158,17 @@ async function ensureCsrfCookie() {
     throw new ApiError(response.status, errorData?.message ?? response.statusText, errorData)
   }
 
-  xsrfToken = extractXsrfToken(response) ?? resolveXsrfToken()
+  xsrfToken = extractXsrfToken(response) ?? readXsrfCookie()
+
+  return xsrfToken
+}
+
+function shouldRetryWithFreshCsrf(
+  response: Response,
+  options: ApiRequestOptions,
+  hasRetriedCsrf: boolean,
+) {
+  return response.status === 419 && isMutationMethod(options.method) && !hasRetriedCsrf
 }
 
 function mergeHeaders(base: HeadersInit, overrides?: HeadersInit) {
@@ -152,12 +185,11 @@ function isMutationMethod(method?: string) {
   return ['POST', 'PUT', 'PATCH', 'DELETE'].includes((method ?? '').toUpperCase())
 }
 
-function csrfHeader(method?: string) {
+function csrfHeader(method?: string, token = resolveXsrfToken()) {
   if (!isMutationMethod(method)) {
     return null
   }
 
-  const token = resolveXsrfToken()
   if (!token) {
     return null
   }
@@ -230,19 +262,27 @@ function readCookie(name: string) {
 }
 
 function resolveXsrfToken() {
-  if (xsrfToken) {
-    return xsrfToken
-  }
+  const cookieToken = readXsrfCookie()
 
-  const cookieToken = readCookie('XSRF-TOKEN')
+  if (!cookieToken && xsrfToken) {
+    xsrfToken = null
+  }
 
   if (!cookieToken) {
     return null
   }
 
-  xsrfToken = decodeURIComponent(cookieToken)
+  if (xsrfToken !== cookieToken) {
+    xsrfToken = cookieToken
+  }
 
   return xsrfToken
+}
+
+function readXsrfCookie() {
+  const token = readCookie('XSRF-TOKEN')
+
+  return token ? decodeURIComponent(token) : null
 }
 
 function extractXsrfToken(response: Response) {

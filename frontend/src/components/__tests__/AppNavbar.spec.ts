@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createWebHistory } from 'vue-router'
 
 import AppNavbar from '@/components/AppNavbar.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useToastStore } from '@/stores/toasts'
 import PlaceholderView from '@/views/PlaceholderView.vue'
 
 function createTestRouter() {
@@ -60,16 +61,23 @@ async function mountNavbar() {
   router.push('/')
   await router.isReady()
 
-  return mount(AppNavbar, {
+  const wrapper = mount(AppNavbar, {
     global: {
       plugins: [pinia, router],
     },
   })
+
+  return {
+    authStore: useAuthStore(),
+    router,
+    toastStore: useToastStore(),
+    wrapper,
+  }
 }
 
 describe('AppNavbar', () => {
   it('shows guest account links when logged out', async () => {
-    const wrapper = await mountNavbar()
+    const { wrapper } = await mountNavbar()
 
     expect(wrapper.text()).toContain('BikeMap')
     expect(wrapper.text()).toContain('Register')
@@ -79,8 +87,7 @@ describe('AppNavbar', () => {
   })
 
   it('shows ride and account links for logged in users', async () => {
-    const wrapper = await mountNavbar()
-    const authStore = useAuthStore()
+    const { authStore, wrapper } = await mountNavbar()
 
     authStore.currentUser = {
       id: 1,
@@ -99,8 +106,7 @@ describe('AppNavbar', () => {
   })
 
   it('shows admin tools for admin users', async () => {
-    const wrapper = await mountNavbar()
-    const authStore = useAuthStore()
+    const { authStore, wrapper } = await mountNavbar()
 
     authStore.currentUser = {
       id: 1,
@@ -111,5 +117,26 @@ describe('AppNavbar', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.text()).toContain('Admin Tools')
+  })
+
+  it('logs out and redirects to the homepage', async () => {
+    const { authStore, router, toastStore, wrapper } = await mountNavbar()
+    const logoutSpy = vi.spyOn(authStore, 'logout').mockResolvedValue()
+
+    authStore.currentUser = {
+      id: 1,
+      name: 'Rider',
+      email: 'rider@example.com',
+      is_admin: false,
+    }
+    await router.push({ name: 'rides' })
+    await wrapper.vm.$nextTick()
+
+    await wrapper.get('button').trigger('click')
+    await flushPromises()
+
+    expect(logoutSpy).toHaveBeenCalledOnce()
+    expect(toastStore.toasts[0]?.message).toBe('Successfully Logged Out')
+    expect(router.currentRoute.value.name).toBe('home')
   })
 })
