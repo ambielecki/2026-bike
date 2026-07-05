@@ -20,7 +20,9 @@ Route::get('/user', function (Request $request) {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/locations', [LocationController::class, 'index']);
     Route::post('/locations', [LocationController::class, 'store']);
+    Route::get('/rides', [RideController::class, 'index']);
     Route::post('/rides', [RideController::class, 'store']);
+    Route::get('/rides/{ride}', [RideController::class, 'show']);
 });
 
 if (strcasecmp((string) Config::get('app.env'), 'production') !== 0) {

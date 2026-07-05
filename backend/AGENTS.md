@@ -12,6 +12,7 @@ This is a PHP 8.5 Laravel 13 API
     - Use Laravel Artisan commands when possible to run migrations, create new migrations, tests, and other files 
     - Create new unit tests and integration tests as needed
 - Use the sportlog/fit package for processing FIT files
+- PHP functions should have return types and typed arguments
 
 ## Verification
 - Run tests in the phpfpm85-2026-command docker container by running `docker exec -it phpfpm85-2026-command php artisan test`

@@ -4,6 +4,8 @@ import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
 import PlaceholderView from '@/views/PlaceholderView.vue'
 import RegisterView from '@/views/RegisterView.vue'
+import RideDetailsView from '@/views/RideDetailsView.vue'
+import RideListView from '@/views/RideListView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -16,15 +18,17 @@ const router = createRouter({
     {
       path: '/rides',
       name: 'rides',
-      component: PlaceholderView,
-      props: {
-        title: 'Rides',
-      },
+      component: RideListView,
     },
     {
       path: '/rides/add',
       name: 'add-ride',
       component: AddRideView,
+    },
+    {
+      path: '/rides/:id',
+      name: 'ride-details',
+      component: RideDetailsView,
     },
     {
       path: '/admin',
