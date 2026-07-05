@@ -26,6 +26,7 @@ class IndexRideRequest extends FormRequest
 
         return [
             'date_range' => ['nullable', 'string', Rule::in(['last_week', 'last_month', 'last_year'])],
+            'end_date' => ['nullable', 'date', Rule::when($this->filled('start_date'), 'after_or_equal:start_date')],
             'location_id' => [
                 'nullable',
                 'integer',
@@ -33,6 +34,7 @@ class IndexRideRequest extends FormRequest
             ],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', Rule::in([10, 25, 50])],
+            'start_date' => ['nullable', 'date'],
         ];
     }
 }

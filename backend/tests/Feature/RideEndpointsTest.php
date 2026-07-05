@@ -158,15 +158,74 @@ class RideEndpointsTest extends TestCase
             ->assertJsonMissing(['name' => 'Other Location Ride']);
     }
 
+    public function test_user_can_filter_rides_by_date_bounds_and_location(): void
+    {
+        $user = User::factory()->create();
+        $location = Location::factory()->create([
+            'user_id' => $user->id,
+        ]);
+        $otherLocation = Location::factory()->create([
+            'user_id' => $user->id,
+        ]);
+        $matchingRide = Ride::factory()->create([
+            'name' => 'Overlay Ride',
+            'user_id' => $user->id,
+            'location_id' => $location->id,
+            'datetime' => '2026-07-04 10:30:00',
+        ]);
+        Ride::factory()->create([
+            'name' => 'Too Early Ride',
+            'user_id' => $user->id,
+            'location_id' => $location->id,
+            'datetime' => '2026-07-01 10:30:00',
+        ]);
+        Ride::factory()->create([
+            'name' => 'Too Late Ride',
+            'user_id' => $user->id,
+            'location_id' => $location->id,
+            'datetime' => '2026-07-08 10:30:00',
+        ]);
+        Ride::factory()->create([
+            'name' => 'Wrong Location Ride',
+            'user_id' => $user->id,
+            'location_id' => $otherLocation->id,
+            'datetime' => '2026-07-04 10:30:00',
+        ]);
+        Ride::factory()->create([
+            'name' => 'Another User Ride',
+            'datetime' => '2026-07-04 10:30:00',
+        ]);
+
+        $response = $this->actingAs($user)->getJson("/api/rides?location_id={$location->id}&start_date=2026-07-03&end_date=2026-07-05&per_page=50");
+
+        $response->assertOk()
+            ->assertJsonPath('data.0.id', $matchingRide->id)
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonMissing(['name' => 'Too Early Ride'])
+            ->assertJsonMissing(['name' => 'Too Late Ride'])
+            ->assertJsonMissing(['name' => 'Wrong Location Ride'])
+            ->assertJsonMissing(['name' => 'Another User Ride']);
+    }
+
     public function test_ride_list_rejects_invalid_filters(): void
     {
         $user = User::factory()->create();
         $otherLocation = Location::factory()->create();
 
-        $response = $this->actingAs($user)->getJson("/api/rides?location_id={$otherLocation->id}&date_range=forever&per_page=100");
+        $response = $this->actingAs($user)->getJson("/api/rides?location_id={$otherLocation->id}&date_range=forever&per_page=100&start_date=not-a-date&end_date=2026-01-01");
 
         $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['location_id', 'date_range', 'per_page']);
+            ->assertJsonValidationErrors(['location_id', 'date_range', 'per_page', 'start_date']);
+    }
+
+    public function test_ride_list_rejects_end_date_before_start_date(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->getJson('/api/rides?start_date=2026-07-05&end_date=2026-07-04');
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['end_date']);
     }
 
     public function test_ride_list_uses_small_thumbnail_when_sizes_exist_and_original_fallback(): void

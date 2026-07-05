@@ -6,6 +6,7 @@ import PlaceholderView from '@/views/PlaceholderView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import RideDetailsView from '@/views/RideDetailsView.vue'
 import RideListView from '@/views/RideListView.vue'
+import RideOverlayView from '@/views/RideOverlayView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,6 +25,11 @@ const router = createRouter({
       path: '/rides/add',
       name: 'add-ride',
       component: AddRideView,
+    },
+    {
+      path: '/rides/overlay',
+      name: 'ride-overlay',
+      component: RideOverlayView,
     },
     {
       path: '/rides/:id',

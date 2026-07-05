@@ -51,6 +51,7 @@ function closeMobileMenu() {
       <template v-if="authStore.isAuthenticated">
         <RouterLink class="nav-link" :to="{ name: 'rides' }">Rides</RouterLink>
         <RouterLink class="nav-link" :to="{ name: 'add-ride' }">Add Ride</RouterLink>
+        <RouterLink class="nav-link" :to="{ name: 'ride-overlay' }">Ride Overlay</RouterLink>
       </template>
 
       <template v-if="authStore.isAdmin">
@@ -98,6 +99,9 @@ function closeMobileMenu() {
             <RouterLink class="drawer-link" :to="{ name: 'add-ride' }" @click="closeMobileMenu">
               Add Ride
             </RouterLink>
+            <RouterLink class="drawer-link" :to="{ name: 'ride-overlay' }" @click="closeMobileMenu">
+              Ride Overlay
+            </RouterLink>
           </template>
 
           <template v-if="authStore.isAdmin">
@@ -144,7 +148,7 @@ function closeMobileMenu() {
   padding: 0.75rem clamp(1rem, 4vw, 3rem);
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 1000;
 }
 
 .brand-link,
@@ -225,7 +229,7 @@ function closeMobileMenu() {
   border: 0;
   inset: 0;
   position: fixed;
-  z-index: 30;
+  z-index: 1010;
 }
 
 .mobile-drawer {
@@ -239,7 +243,7 @@ function closeMobileMenu() {
   position: fixed;
   top: 0;
   width: min(82vw, 20rem);
-  z-index: 40;
+  z-index: 1020;
 }
 
 .drawer-header {

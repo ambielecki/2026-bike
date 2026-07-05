@@ -28,6 +28,11 @@ function createTestRouter() {
         component: PlaceholderView,
       },
       {
+        path: '/rides/overlay',
+        name: 'ride-overlay',
+        component: PlaceholderView,
+      },
+      {
         path: '/admin',
         name: 'admin-tools',
         component: PlaceholderView,
@@ -126,6 +131,7 @@ describe('AppNavbar', () => {
 
     expect(wrapper.text()).toContain('Rides')
     expect(wrapper.text()).toContain('Add Ride')
+    expect(wrapper.text()).toContain('Ride Overlay')
     expect(wrapper.text()).toContain('Settings')
     expect(wrapper.text()).toContain('Log Out')
     expect(wrapper.text()).not.toContain('Admin Tools')
@@ -148,6 +154,7 @@ describe('AppNavbar', () => {
 
     expect(drawer.text()).toContain('Rides')
     expect(drawer.text()).toContain('Add Ride')
+    expect(drawer.text()).toContain('Ride Overlay')
     expect(drawer.text()).toContain('Settings')
     expect(drawer.text()).toContain('Log Out')
     expect(drawer.text()).not.toContain('Admin Tools')

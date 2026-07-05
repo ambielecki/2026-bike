@@ -24,10 +24,12 @@ const props = withDefaults(
     center?: MapCenter | null
     opacity?: number
     routes: MapRoute[]
+    showMarkers?: boolean
   }>(),
   {
     center: null,
     opacity: 0.75,
+    showMarkers: true,
   },
 )
 
@@ -56,6 +58,7 @@ onMounted(async () => {
 
   routeLayerGroup = layerGroup().addTo(map)
   renderRoutes()
+  centerMap()
   setTimeout(() => map?.invalidateSize(), 0)
 })
 
@@ -66,9 +69,19 @@ onBeforeUnmount(() => {
 })
 
 watch(
-  () => [props.routes, props.opacity, props.center] as const,
+  () => [props.routes, props.opacity, props.showMarkers] as const,
   () => {
     renderRoutes()
+  },
+  {
+    deep: true,
+  },
+)
+
+watch(
+  () => props.center,
+  () => {
+    centerMap()
   },
   {
     deep: true,
@@ -93,6 +106,10 @@ function renderRoutes() {
         weight: 4,
       }).addTo(routeLayerGroup as LayerGroup)
 
+      if (!props.showMarkers) {
+        return
+      }
+
       const firstPoint = latLngs[0]
       const lastPoint = latLngs[latLngs.length - 1]
 
@@ -107,14 +124,7 @@ function renderRoutes() {
           title: `${route.name} end`,
         }).addTo(routeLayerGroup as LayerGroup)
       }
-
     })
-
-  const center = props.center ?? firstVisibleRoutePoint()
-
-  if (center) {
-    map.setView([center.latitude, center.longitude], 13)
-  }
 }
 
 function firstVisibleRoutePoint(): MapCenter | null {
@@ -127,6 +137,18 @@ function firstVisibleRoutePoint(): MapCenter | null {
   return {
     latitude: point.latitude,
     longitude: point.longitude,
+  }
+}
+
+function centerMap() {
+  if (!map) {
+    return
+  }
+
+  const center = props.center ?? firstVisibleRoutePoint()
+
+  if (center) {
+    map.setView([center.latitude, center.longitude], 13)
   }
 }
 </script>
@@ -143,15 +165,19 @@ function firstVisibleRoutePoint(): MapCenter | null {
   background: #e7ece2;
   border: 0.0625rem solid rgba(53, 94, 59, 0.16);
   border-radius: 0.5rem;
+  isolation: isolate;
   min-height: 35rem;
   overflow: hidden;
   position: relative;
+  z-index: 0;
 }
 
 .map-canvas {
   height: 100%;
   min-height: 24rem;
+  position: relative;
   width: 100%;
+  z-index: 0;
 }
 
 .map-empty {

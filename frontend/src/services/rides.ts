@@ -55,9 +55,11 @@ export interface RideDetails {
 
 export interface RideListFilters {
   dateRange?: 'last_week' | 'last_month' | 'last_year' | ''
+  endDate?: string
   locationId?: string
   page?: number
   perPage?: 10 | 25 | 50
+  startDate?: string
 }
 
 export interface PaginationMeta {
@@ -106,6 +108,14 @@ export async function getRides(filters: RideListFilters = {}) {
 
   if (filters.dateRange) {
     params.set('date_range', filters.dateRange)
+  }
+
+  if (filters.startDate) {
+    params.set('start_date', filters.startDate)
+  }
+
+  if (filters.endDate) {
+    params.set('end_date', filters.endDate)
   }
 
   if (filters.perPage) {

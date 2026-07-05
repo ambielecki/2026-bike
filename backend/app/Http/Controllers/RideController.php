@@ -7,6 +7,7 @@ use App\Http\Requests\StoreRideRequest;
 use App\Models\Ride;
 use App\Models\RideImage;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -33,6 +34,8 @@ class RideController extends Controller
                     'last_year' => now()->subYear(),
                 });
             })
+            ->when($validated['start_date'] ?? null, fn ($query, string $startDate) => $query->where('datetime', '>=', Carbon::parse($startDate)->startOfDay()))
+            ->when($validated['end_date'] ?? null, fn ($query, string $endDate) => $query->where('datetime', '<=', Carbon::parse($endDate)->endOfDay()))
             ->orderByRaw('datetime IS NULL')
             ->orderByDesc('datetime')
             ->orderByDesc('created_at');
