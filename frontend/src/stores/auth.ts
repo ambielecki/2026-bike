@@ -43,6 +43,24 @@ export const useAuthStore = defineStore('auth', () => {
     await loadCurrentUser()
   }
 
+  async function updateName(name: string) {
+    const user = await api.patch<AuthUser>('/api/user/name', {
+      name,
+    })
+
+    currentUser.value = {
+      ...user,
+      is_admin: Boolean(user.is_admin),
+    }
+  }
+
+  async function resetPassword(password: string, passwordConfirmation: string) {
+    await api.patch<void>('/api/user/password', {
+      password,
+      password_confirmation: passwordConfirmation,
+    })
+  }
+
   async function loadCurrentUser() {
     if (isLoading.value) {
       return
@@ -99,6 +117,8 @@ export const useAuthStore = defineStore('auth', () => {
     loadCurrentUser,
     logout,
     register,
+    resetPassword,
+    updateName,
   }
 })
 

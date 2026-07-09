@@ -128,4 +128,75 @@ describe('auth store', () => {
     )
     expect(authStore.currentUser?.name).toBe('New Rider')
   })
+
+  it('updates the current user name', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          id: 1,
+          name: 'Updated Rider',
+          email: 'rider@example.com',
+          is_admin: 0,
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    )
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const authStore = useAuthStore()
+
+    await authStore.updateName('Updated Rider')
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://api.example.test/api/user/name',
+      expect.objectContaining({
+        credentials: 'include',
+        method: 'PATCH',
+      }),
+    )
+
+    const body = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string) as {
+      name: string
+    }
+    const headers = new Headers(fetchMock.mock.calls[0]?.[1]?.headers)
+
+    expect(body).toEqual({
+      name: 'Updated Rider',
+    })
+    expect(headers.get('X-XSRF-TOKEN')).toBe('test-token')
+    expect(authStore.currentUser?.name).toBe('Updated Rider')
+    expect(authStore.currentUser?.is_admin).toBe(false)
+  })
+
+  it('resets the current user password', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(new Response(null, { status: 204 }))
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const authStore = useAuthStore()
+
+    await authStore.resetPassword('new-password', 'new-password')
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://api.example.test/api/user/password',
+      expect.objectContaining({
+        credentials: 'include',
+        method: 'PATCH',
+      }),
+    )
+
+    const body = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string) as {
+      password: string
+      password_confirmation: string
+    }
+
+    expect(body).toEqual({
+      password: 'new-password',
+      password_confirmation: 'new-password',
+    })
+  })
 })

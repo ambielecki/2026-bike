@@ -3,6 +3,7 @@
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\RideController;
 use App\Http\Controllers\TestHelperController;
+use App\Http\Controllers\UserSettingsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,8 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::patch('/user/name', [UserSettingsController::class, 'updateName']);
+    Route::patch('/user/password', [UserSettingsController::class, 'updatePassword']);
     Route::get('/locations', [LocationController::class, 'index']);
     Route::post('/locations', [LocationController::class, 'store']);
     Route::get('/rides', [RideController::class, 'index']);
