@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/user/password', [UserSettingsController::class, 'updatePassword']);
     Route::get('/locations', [LocationController::class, 'index']);
     Route::post('/locations', [LocationController::class, 'store']);
+    Route::patch('/locations/{location}', [LocationController::class, 'update']);
     Route::get('/rides', [RideController::class, 'index']);
     Route::post('/rides', [RideController::class, 'store']);
     Route::get('/rides/{ride}', [RideController::class, 'show']);

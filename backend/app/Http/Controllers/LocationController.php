@@ -2,22 +2,39 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\IndexLocationRequest;
 use App\Http\Requests\StoreLocationRequest;
+use App\Http\Requests\UpdateLocationRequest;
 use App\Models\Location;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class LocationController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(IndexLocationRequest $request): JsonResponse
     {
-        $locations = Location::query()
+        $query = Location::query()
             ->whereBelongsTo($request->user())
-            ->orderBy('name')
-            ->get();
+            ->orderBy('name');
+
+        if ($request->hasAny(['page', 'per_page'])) {
+            $validated = $request->validated();
+            $paginator = $query->paginate((int) ($validated['per_page'] ?? 10));
+
+            return response()->json([
+                'data' => $paginator->getCollection()->values(),
+                'meta' => [
+                    'current_page' => $paginator->currentPage(),
+                    'from' => $paginator->firstItem(),
+                    'last_page' => $paginator->lastPage(),
+                    'per_page' => $paginator->perPage(),
+                    'to' => $paginator->lastItem(),
+                    'total' => $paginator->total(),
+                ],
+            ]);
+        }
 
         return response()->json([
-            'data' => $locations,
+            'data' => $query->get(),
         ]);
     }
 
@@ -31,5 +48,16 @@ class LocationController extends Controller
         return response()->json([
             'data' => $location,
         ], 201);
+    }
+
+    public function update(UpdateLocationRequest $request, Location $location): JsonResponse
+    {
+        abort_unless($location->user_id === $request->user()?->id, 404);
+
+        $location->update($request->validated());
+
+        return response()->json([
+            'data' => $location->fresh(),
+        ]);
     }
 }

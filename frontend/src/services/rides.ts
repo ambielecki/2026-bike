@@ -86,6 +86,17 @@ export interface CreateLocationPayload {
   longitude: string
 }
 
+export interface LocationListFilters {
+  page?: number
+  perPage?: 10 | 25 | 50
+}
+
+export interface UpdateLocationPayload {
+  name: string
+  latitude: string
+  longitude: string
+}
+
 export interface CreateRidePayload {
   name: string
   description: string
@@ -103,6 +114,22 @@ export async function getLocations() {
   const response = await api.get<ApiData<Location[]>>('/api/locations')
 
   return response.data
+}
+
+export async function getPaginatedLocations(filters: LocationListFilters = {}) {
+  const params = new URLSearchParams()
+
+  if (filters.perPage) {
+    params.set('per_page', String(filters.perPage))
+  }
+
+  if (filters.page) {
+    params.set('page', String(filters.page))
+  }
+
+  const query = params.toString()
+
+  return api.get<PaginatedApiData<Location[]>>(query ? `/api/locations?${query}` : '/api/locations')
 }
 
 export async function getRides(filters: RideListFilters = {}) {
@@ -152,6 +179,12 @@ export async function createLocation(payload: CreateLocationPayload) {
     latitude: payload.latitude,
     longitude: payload.longitude,
   })
+
+  return response.data
+}
+
+export async function updateLocation(id: string | number, payload: UpdateLocationPayload) {
+  const response = await api.patch<ApiData<Location>>(`/api/locations/${id}`, payload)
 
   return response.data
 }
