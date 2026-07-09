@@ -14,7 +14,7 @@ vi.mock('@/services/rides', () => ({
 
 const routeMapStub = {
   name: 'RideRouteMap',
-  props: ['center', 'opacity', 'routes', 'showMarkers'],
+  props: ['center', 'mapProvider', 'opacity', 'routes', 'showMarkers'],
   template: '<div class="route-map-stub"></div>',
 }
 
@@ -68,6 +68,8 @@ function ridesResponse(overrides = {}) {
         location: {
           id: 1,
           name: 'North Park',
+          system_key: null,
+          map_provider: 'openstreetmap' as const,
         },
         thumbnail_url: null,
       },
@@ -107,6 +109,8 @@ function rideDetails(overrides = {}) {
       name: 'North Park',
       latitude: '40.000000',
       longitude: '-79.000000',
+      system_key: null,
+      map_provider: 'openstreetmap' as const,
     },
     ...overrides,
   }
@@ -120,6 +124,8 @@ describe('RideOverlayView', () => {
         id: 1,
         name: 'North Park',
         user_id: 1,
+        system_key: null,
+        map_provider: 'openstreetmap' as const,
         latitude: '40.000000',
         longitude: '-79.000000',
       },
@@ -128,20 +134,12 @@ describe('RideOverlayView', () => {
     mockedGetRide.mockResolvedValue(rideDetails())
   })
 
-  it('loads rides with overlay defaults and renders a condensed ride list', async () => {
+  it('requires a selected location before loading rides', async () => {
     const { wrapper } = await mountRideOverlayView()
 
     expect(mockedGetLocations).toHaveBeenCalledOnce()
-    expect(mockedGetRides).toHaveBeenCalledWith({
-      endDate: '',
-      locationId: '',
-      page: 1,
-      perPage: 50,
-      startDate: '',
-    })
-    expect(wrapper.text()).toContain('Morning Ride')
-    expect(wrapper.text()).toContain('12.34 mi')
-    expect(wrapper.text()).toContain('North Park')
+    expect(mockedGetRides).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('Select a location to load rides.')
     expect(wrapper.getComponent(routeMapStub).props('showMarkers')).toBe(false)
   })
 
@@ -164,11 +162,42 @@ describe('RideOverlayView', () => {
       latitude: 40,
       longitude: -79,
     })
+    expect(wrapper.getComponent(routeMapStub).props('mapProvider')).toBe('openstreetmap')
+  })
+
+  it('uses the selected location map provider for overlay maps', async () => {
+    mockedGetLocations.mockResolvedValueOnce([
+      {
+        id: 2,
+        name: 'Watopia',
+        user_id: null,
+        system_key: 'watopia',
+        map_provider: 'watopia' as const,
+        latitude: '-11.683420',
+        longitude: '166.955010',
+      },
+    ])
+
+    const { wrapper } = await mountRideOverlayView()
+
+    await wrapper.find('#overlay-location').setValue('2')
+    await flushPromises()
+
+    expect(mockedGetRides).toHaveBeenCalledWith({
+      endDate: '',
+      locationId: '2',
+      page: 1,
+      perPage: 50,
+      startDate: '',
+    })
+    expect(wrapper.getComponent(routeMapStub).props('mapProvider')).toBe('watopia')
   })
 
   it('adds, colors, overrides, and removes a route', async () => {
     const { wrapper } = await mountRideOverlayView()
 
+    await wrapper.find('#overlay-location').setValue('1')
+    await flushPromises()
     await wrapper.findAll('button').find((button) => button.text() === 'Add')?.trigger('click')
     await flushPromises()
 
@@ -228,6 +257,8 @@ describe('RideOverlayView', () => {
           location: {
             id: 1,
             name: 'North Park',
+            system_key: null,
+            map_provider: 'openstreetmap' as const,
           },
           thumbnail_url: null,
         },
@@ -244,12 +275,14 @@ describe('RideOverlayView', () => {
 
     const { wrapper } = await mountRideOverlayView()
 
+    await wrapper.find('#overlay-location').setValue('1')
+    await flushPromises()
     await wrapper.findAll('button').find((button) => button.text() === 'Load more')?.trigger('click')
     await flushPromises()
 
     expect(mockedGetRides).toHaveBeenLastCalledWith({
       endDate: '',
-      locationId: '',
+      locationId: '1',
       page: 2,
       perPage: 50,
       startDate: '',

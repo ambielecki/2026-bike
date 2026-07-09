@@ -75,6 +75,8 @@ function ridesResponse(overrides = {}) {
         location: {
           id: 1,
           name: 'North Park',
+          system_key: null,
+          map_provider: 'openstreetmap' as const,
         },
         thumbnail_url: 'http://example.test/storage/rides/10/images/small/photo.jpg',
       },
@@ -99,6 +101,8 @@ describe('RideListView', () => {
         id: 1,
         name: 'North Park',
         user_id: 1,
+        system_key: null,
+        map_provider: 'openstreetmap' as const,
         latitude: '40.000000',
         longitude: '-79.000000',
       },

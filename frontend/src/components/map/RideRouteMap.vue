@@ -4,9 +4,21 @@ import 'leaflet.fullscreen'
 import 'leaflet.fullscreen/dist/Control.FullScreen.css'
 
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { latLng, layerGroup, map as createMap, marker, polyline, tileLayer, type LayerGroup, type Map } from 'leaflet'
+import {
+  imageOverlay,
+  latLng,
+  layerGroup,
+  map as createMap,
+  marker,
+  polyline,
+  tileLayer,
+  type Layer,
+  type LayerGroup,
+  type Map,
+} from 'leaflet'
 
-import type { RoutePoint } from '@/services/rides'
+import { watopiaMap } from '@/components/map/watopiaMap'
+import type { MapProvider, RoutePoint } from '@/services/rides'
 
 interface MapCenter {
   latitude: number
@@ -25,11 +37,13 @@ const props = withDefaults(
   defineProps<{
     center?: MapCenter | null
     opacity?: number
+    mapProvider?: MapProvider
     routes: MapRoute[]
     showMarkers?: boolean
   }>(),
   {
     center: null,
+    mapProvider: 'openstreetmap',
     opacity: 0.75,
     showMarkers: true,
   },
@@ -41,6 +55,7 @@ const hasVisibleRoutes = computed(() =>
 )
 let map: Map | null = null
 let routeLayerGroup: LayerGroup | null = null
+let baseLayer: Layer | null = null
 
 onMounted(async () => {
   await nextTick()
@@ -54,10 +69,7 @@ onMounted(async () => {
     scrollWheelZoom: true,
   }).setView([39.5, -98.35], 12)
 
-  tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors',
-    maxZoom: 19,
-  }).addTo(map)
+  renderBaseLayer()
 
   routeLayerGroup = layerGroup().addTo(map)
   renderRoutes()
@@ -68,6 +80,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   map?.remove()
   map = null
+  baseLayer = null
   routeLayerGroup = null
 })
 
@@ -90,6 +103,35 @@ watch(
     deep: true,
   },
 )
+
+watch(
+  () => props.mapProvider,
+  () => {
+    renderBaseLayer()
+    centerMap()
+  },
+)
+
+function renderBaseLayer() {
+  if (!map) {
+    return
+  }
+
+  if (baseLayer) {
+    map.removeLayer(baseLayer)
+  }
+
+  baseLayer = props.mapProvider === 'watopia'
+    ? imageOverlay(watopiaMap.imageUrl, watopiaMap.bounds, {
+        attribution: watopiaMap.attribution,
+      })
+    : tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19,
+      })
+
+  baseLayer.addTo(map)
+}
 
 function renderRoutes() {
   if (!map || !routeLayerGroup) {
@@ -152,12 +194,17 @@ function centerMap() {
 
   if (center) {
     map.setView([center.latitude, center.longitude], 13)
+    return
+  }
+
+  if (props.mapProvider === 'watopia') {
+    map.fitBounds(watopiaMap.initialBounds)
   }
 }
 </script>
 
 <template>
-  <div class="map-shell">
+  <div class="map-shell" :class="`map-shell-${mapProvider}`">
     <div ref="mapElement" class="map-canvas" aria-label="Ride route map"></div>
     <p v-if="!hasVisibleRoutes" class="map-empty">No route data available.</p>
   </div>
@@ -173,6 +220,10 @@ function centerMap() {
   overflow: hidden;
   position: relative;
   z-index: 0;
+}
+
+.map-shell-watopia {
+  background: #0884e2;
 }
 
 .map-canvas {

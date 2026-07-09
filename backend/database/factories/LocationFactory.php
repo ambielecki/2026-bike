@@ -21,8 +21,15 @@ class LocationFactory extends Factory
         return [
             'name' => fake()->city(),
             'user_id' => User::factory(),
+            'system_key' => null,
+            'map_provider' => Location::MAP_PROVIDER_OPENSTREETMAP,
             'latitude' => fake()->latitude(),
             'longitude' => fake()->longitude(),
         ];
+    }
+
+    public function watopia(): static
+    {
+        return $this->state(fn (): array => Location::watopiaAttributes());
     }
 }

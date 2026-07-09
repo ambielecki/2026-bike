@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Location;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -30,7 +31,13 @@ class IndexRideRequest extends FormRequest
             'location_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('locations', 'id')->where('user_id', $userId),
+                Rule::exists('locations', 'id')->where(function ($query) use ($userId): void {
+                    $query->where(function ($query) use ($userId): void {
+                        $query
+                            ->where('user_id', $userId)
+                            ->orWhere('system_key', Location::SYSTEM_KEY_WATOPIA);
+                    });
+                }),
             ],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', Rule::in([10, 25, 50])],

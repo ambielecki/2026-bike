@@ -3,10 +3,14 @@ import { api } from '@/services/api'
 export interface Location {
   id: number
   name: string
-  user_id: number
+  user_id: number | null
+  system_key: string | null
+  map_provider: MapProvider
   latitude: string
   longitude: string
 }
+
+export type MapProvider = 'openstreetmap' | 'watopia'
 
 export interface Ride {
   id: number
@@ -25,6 +29,8 @@ export interface RideListItem {
   location: {
     id: number
     name: string
+    system_key: string | null
+    map_provider: MapProvider
   } | null
   thumbnail_url: string | null
 }
@@ -51,6 +57,8 @@ export interface RideDetails {
     name: string
     latitude: string
     longitude: string
+    system_key: string | null
+    map_provider: MapProvider
   } | null
 }
 

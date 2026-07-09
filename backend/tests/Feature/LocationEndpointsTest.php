@@ -23,11 +23,15 @@ class LocationEndpointsTest extends TestCase
             'name' => 'Hidden Trail',
             'user_id' => $otherUser->id,
         ]);
+        $watopia = Location::factory()->watopia()->create();
 
         $response = $this->actingAs($user)->getJson('/api/locations');
 
         $response->assertOk()
             ->assertJsonPath('data.0.id', $location->id)
+            ->assertJsonPath('data.1.id', $watopia->id)
+            ->assertJsonPath('data.1.system_key', 'watopia')
+            ->assertJsonPath('data.1.map_provider', 'watopia')
             ->assertJsonMissing(['name' => 'Hidden Trail']);
     }
 
@@ -49,6 +53,7 @@ class LocationEndpointsTest extends TestCase
         Location::factory()->create([
             'name' => 'Other Trail',
         ]);
+        Location::factory()->watopia()->create();
 
         $response = $this->actingAs($user)->getJson('/api/locations?page=2&per_page=1');
 
@@ -57,6 +62,7 @@ class LocationEndpointsTest extends TestCase
             ->assertJsonPath('meta.current_page', 2)
             ->assertJsonPath('meta.per_page', 1)
             ->assertJsonPath('meta.total', 3)
+            ->assertJsonMissing(['system_key' => 'watopia'])
             ->assertJsonMissing(['name' => 'Other Trail']);
     }
 

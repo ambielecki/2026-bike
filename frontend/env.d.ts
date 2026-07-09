@@ -19,15 +19,25 @@ declare module 'leaflet' {
     clearLayers(): this
   }
 
+  export interface Layer {
+    addTo(map: Map): this
+  }
+
   export interface Map {
+    fitBounds(bounds: [[number, number], [number, number]]): this
     invalidateSize(): this
     remove(): this
+    removeLayer(layer: Layer): this
     setView(center: [number, number], zoom: number): this
   }
 
   export interface TileLayerOptions {
     attribution?: string
     maxZoom?: number
+  }
+
+  export interface ImageOverlayOptions {
+    attribution?: string
   }
 
   export interface PolylineOptions {
@@ -54,7 +64,12 @@ declare module 'leaflet' {
     latLngs: LatLng[],
     options?: PolylineOptions,
   ): { addTo(layer: LayerGroup): unknown }
-  export function tileLayer(urlTemplate: string, options?: TileLayerOptions): { addTo(map: Map): unknown }
+  export function tileLayer(urlTemplate: string, options?: TileLayerOptions): Layer
+  export function imageOverlay(
+    imageUrl: string,
+    bounds: [[number, number], [number, number]],
+    options?: ImageOverlayOptions,
+  ): Layer
 }
 
 declare module 'leaflet.fullscreen'

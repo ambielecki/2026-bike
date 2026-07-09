@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import { map as createMap, marker } from 'leaflet'
+import { imageOverlay, map as createMap, marker, tileLayer } from 'leaflet'
 
 import RideRouteMap from '@/components/map/RideRouteMap.vue'
 
@@ -8,17 +8,24 @@ const addToMock = vi.fn().mockReturnThis()
 const clearLayersMock = vi.fn().mockReturnThis()
 const invalidateSizeMock = vi.fn().mockReturnThis()
 const removeMock = vi.fn().mockReturnThis()
+const removeLayerMock = vi.fn().mockReturnThis()
+const fitBoundsMock = vi.fn().mockReturnThis()
 const setViewMock = vi.fn().mockReturnThis()
 
 vi.mock('leaflet', () => ({
+  imageOverlay: vi.fn(() => ({
+    addTo: addToMock,
+  })),
   latLng: (latitude: number, longitude: number) => ({ lat: latitude, lng: longitude }),
   layerGroup: vi.fn(() => ({
     addTo: addToMock,
     clearLayers: clearLayersMock,
   })),
   map: vi.fn(() => ({
+    fitBounds: fitBoundsMock,
     invalidateSize: invalidateSizeMock,
     remove: removeMock,
+    removeLayer: removeLayerMock,
     setView: setViewMock,
   })),
   marker: vi.fn(() => ({
@@ -50,7 +57,9 @@ const route = {
   visible: true,
 }
 const createMapMock = vi.mocked(createMap)
+const imageOverlayMock = vi.mocked(imageOverlay)
 const markerMock = vi.mocked(marker)
+const tileLayerMock = vi.mocked(tileLayer)
 
 describe('RideRouteMap', () => {
   afterEach(() => {
@@ -75,6 +84,49 @@ describe('RideRouteMap', () => {
       scrollWheelZoom: true,
     })
     expect(setViewMock).toHaveBeenCalledWith([40, -79], 13)
+  })
+
+  it('uses OpenStreetMap tiles by default', async () => {
+    mount(RideRouteMap, {
+      props: {
+        routes: [route],
+      },
+    })
+
+    await flushPromises()
+
+    expect(tileLayerMock).toHaveBeenCalledWith('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19,
+    })
+    expect(imageOverlayMock).not.toHaveBeenCalled()
+  })
+
+  it('uses the Watopia image overlay without OpenStreetMap tiles in Watopia mode', async () => {
+    mount(RideRouteMap, {
+      props: {
+        mapProvider: 'watopia',
+        routes: [],
+      },
+    })
+
+    await flushPromises()
+
+    expect(imageOverlayMock).toHaveBeenCalledWith(
+      expect.stringContaining('watopia.png'),
+      [
+        [-11.62597, 166.87747],
+        [-11.74087, 167.03255],
+      ],
+      {
+        attribution: '&copy; Zwift',
+      },
+    )
+    expect(tileLayerMock).not.toHaveBeenCalled()
+    expect(fitBoundsMock).toHaveBeenCalledWith([
+      [-11.635444, 166.93555],
+      [-11.673613, 166.972511],
+    ])
   })
 
   it('falls back to the first route point when no center is provided', async () => {

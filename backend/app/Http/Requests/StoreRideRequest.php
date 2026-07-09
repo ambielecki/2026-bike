@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Location;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -30,7 +31,13 @@ class StoreRideRequest extends FormRequest
             'location_id' => [
                 'required',
                 'integer',
-                Rule::exists('locations', 'id')->where('user_id', $userId),
+                Rule::exists('locations', 'id')->where(function ($query) use ($userId): void {
+                    $query->where(function ($query) use ($userId): void {
+                        $query
+                            ->where('user_id', $userId)
+                            ->orWhere('system_key', Location::SYSTEM_KEY_WATOPIA);
+                    });
+                }),
             ],
             'fit_file' => [
                 'required',

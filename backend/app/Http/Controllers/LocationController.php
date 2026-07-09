@@ -13,7 +13,11 @@ class LocationController extends Controller
     public function index(IndexLocationRequest $request): JsonResponse
     {
         $query = Location::query()
-            ->whereBelongsTo($request->user())
+            ->when(
+                $request->hasAny(['page', 'per_page']),
+                fn ($query) => $query->editableByUser($request->user()),
+                fn ($query) => $query->visibleToUser($request->user()),
+            )
             ->orderBy('name');
 
         if ($request->hasAny(['page', 'per_page'])) {

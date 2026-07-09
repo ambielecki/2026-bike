@@ -9,6 +9,7 @@ import {
   getRide,
   getRides,
   type Location,
+  type MapProvider,
   type PaginationMeta,
   type RideDetails,
   type RideListItem,
@@ -64,6 +65,7 @@ const locationOptions = computed(() =>
 const selectedLocation = computed(() =>
   locations.value.find((location) => String(location.id) === locationId.value) ?? null,
 )
+const mapProvider = computed<MapProvider>(() => selectedLocation.value?.map_provider ?? 'openstreetmap')
 
 const hasMoreRides = computed(() => meta.value.current_page < meta.value.last_page)
 
@@ -93,7 +95,6 @@ const mapCenter = computed(() => {
 
 onMounted(async () => {
   await loadLocations()
-  await loadRides({ append: false })
 })
 
 watch([locationId, startDate, endDate], () => {
@@ -115,13 +116,19 @@ async function loadLocations() {
 }
 
 async function loadRides({ append }: { append: boolean }) {
+  if (!selectedLocation.value) {
+    rides.value = []
+    meta.value = emptyMeta()
+    return
+  }
+
   isLoadingRides.value = true
   formError.value = ''
 
   try {
     const response = await getRides({
       endDate: endDate.value,
-      locationId: locationId.value,
+      locationId: String(selectedLocation.value.id),
       page: page.value,
       perPage: 50,
       startDate: startDate.value,
@@ -213,6 +220,17 @@ function formatDistance(value: string | null) {
 
   return `${Number(value).toFixed(2)} mi`
 }
+
+function emptyMeta(): PaginationMeta {
+  return {
+    current_page: 1,
+    from: null,
+    last_page: 1,
+    per_page: 50,
+    to: null,
+    total: 0,
+  }
+}
 </script>
 
 <template>
@@ -227,6 +245,7 @@ function formatDistance(value: string | null) {
       <div class="map-column">
         <RideRouteMap
           :center="mapCenter"
+          :map-provider="mapProvider"
           :opacity="routeOpacity"
           :routes="mapRoutes"
           :show-markers="false"
@@ -265,7 +284,7 @@ function formatDistance(value: string | null) {
             v-model="locationId"
             label="Location"
             :options="locationOptions"
-            :placeholder="isLoadingLocations ? 'Loading locations' : 'All locations'"
+            :placeholder="isLoadingLocations ? 'Loading locations' : 'Select a location'"
           />
 
           <label class="date-field" for="overlay-start-date">
@@ -281,6 +300,7 @@ function formatDistance(value: string | null) {
 
         <section class="condensed-list" aria-live="polite">
           <p v-if="isLoadingRides && rides.length === 0" class="status-text">Loading rides...</p>
+          <p v-else-if="!selectedLocation" class="status-text">Select a location to load rides.</p>
           <p v-else-if="rides.length === 0" class="status-text">No rides match these filters.</p>
 
           <article v-for="ride in rides" v-else :key="ride.id" class="condensed-ride">

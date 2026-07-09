@@ -9,6 +9,7 @@ import { ApiError } from '@/services/api'
 import {
   deleteRide,
   getRide,
+  type MapProvider,
   updateRide,
   type RideDetails,
   type RoutePoint,
@@ -74,6 +75,8 @@ const mapCenter = computed(() => {
 
   return ride.value?.route_data[0] ?? null
 })
+
+const mapProvider = computed<MapProvider>(() => ride.value?.location?.map_provider ?? 'openstreetmap')
 
 onMounted(() => {
   void loadRide()
@@ -246,7 +249,12 @@ function formatDuration(value: string | null) {
 
       <section class="details-layout">
         <div class="map-column">
-          <RideRouteMap :center="mapCenter" :opacity="routeOpacity" :routes="mapRoutes" />
+          <RideRouteMap
+            :center="mapCenter"
+            :map-provider="mapProvider"
+            :opacity="routeOpacity"
+            :routes="mapRoutes"
+          />
 
           <section class="route-controls" aria-label="Route display controls">
             <label class="control-field" for="route-color">

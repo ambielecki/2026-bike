@@ -19,9 +19,9 @@ const mockedGetRide = vi.mocked(getRide)
 const mockedUpdateRide = vi.mocked(updateRide)
 
 const routeMapStub = {
-  props: ['center', 'opacity', 'routes'],
+  props: ['center', 'mapProvider', 'opacity', 'routes'],
   template:
-    '<div class="route-map-stub" :data-opacity="opacity">{{ routes.length }} route overlays</div>',
+    '<div class="route-map-stub" :data-map-provider="mapProvider" :data-opacity="opacity">{{ routes.length }} route overlays</div>',
 }
 
 async function mountRideDetailsView(id = '10') {
@@ -94,6 +94,8 @@ function rideDetails(overrides = {}) {
       name: 'North Park',
       latitude: '40.000000',
       longitude: '-79.000000',
+      system_key: null,
+      map_provider: 'openstreetmap' as const,
     },
     ...overrides,
   }
@@ -135,6 +137,26 @@ describe('RideDetailsView', () => {
       latitude: 40,
       longitude: -79,
     })
+    expect(map.props('mapProvider')).toBe('openstreetmap')
+  })
+
+  it('passes Watopia map mode for Watopia rides', async () => {
+    mockedGetRide.mockResolvedValueOnce(
+      rideDetails({
+        location: {
+          id: 2,
+          name: 'Watopia',
+          latitude: '-11.683420',
+          longitude: '166.955010',
+          system_key: 'watopia',
+          map_provider: 'watopia' as const,
+        },
+      }),
+    )
+
+    const { wrapper } = await mountRideDetailsView()
+
+    expect(wrapper.findComponent(routeMapStub).props('mapProvider')).toBe('watopia')
   })
 
   it('centers on the first route point when the ride location is missing', async () => {

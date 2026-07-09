@@ -24,7 +24,7 @@ class RideController extends Controller
 
         $query = Ride::query()
             ->with([
-                'location:id,name',
+                'location:id,name,system_key,map_provider',
                 'images' => fn ($query) => $query->oldest('id'),
             ])
             ->whereBelongsTo($request->user())
@@ -54,6 +54,8 @@ class RideController extends Controller
                 'location' => $ride->location ? [
                     'id' => $ride->location->id,
                     'name' => $ride->location->name,
+                    'system_key' => $ride->location->system_key,
+                    'map_provider' => $ride->location->map_provider,
                 ] : null,
                 'thumbnail_url' => $this->thumbnailUrl($ride),
             ])->values(),
@@ -127,7 +129,7 @@ class RideController extends Controller
         abort_unless($ride->user_id === request()->user()?->id, 404);
 
         $ride->load([
-            'location:id,name,latitude,longitude',
+            'location:id,name,latitude,longitude,system_key,map_provider',
             'images' => fn ($query) => $query->oldest('id'),
         ]);
 
@@ -148,7 +150,7 @@ class RideController extends Controller
         ]);
 
         $ride->load([
-            'location:id,name,latitude,longitude',
+            'location:id,name,latitude,longitude,system_key,map_provider',
             'images' => fn ($query) => $query->oldest('id'),
         ]);
 
@@ -190,6 +192,8 @@ class RideController extends Controller
                 'name' => $ride->location->name,
                 'latitude' => $ride->location->latitude,
                 'longitude' => $ride->location->longitude,
+                'system_key' => $ride->location->system_key,
+                'map_provider' => $ride->location->map_provider,
             ] : null,
             'image_url' => $this->imageUrl($ride, 'medium'),
         ];

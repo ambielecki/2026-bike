@@ -339,6 +339,36 @@ class RideEndpointsTest extends TestCase
             ->assertJsonMissing(['name' => 'Other Location Ride']);
     }
 
+    public function test_user_can_filter_rides_by_watopia_location(): void
+    {
+        $user = User::factory()->create();
+        $watopia = Location::factory()->watopia()->create();
+        $ownedLocation = Location::factory()->create([
+            'user_id' => $user->id,
+        ]);
+        $matchingRide = Ride::factory()->create([
+            'name' => 'Watopia Ride',
+            'user_id' => $user->id,
+            'location_id' => $watopia->id,
+            'datetime' => now(),
+        ]);
+        Ride::factory()->create([
+            'name' => 'Outdoor Ride',
+            'user_id' => $user->id,
+            'location_id' => $ownedLocation->id,
+            'datetime' => now()->subDay(),
+        ]);
+
+        $response = $this->actingAs($user)->getJson("/api/rides?location_id={$watopia->id}");
+
+        $response->assertOk()
+            ->assertJsonPath('data.0.id', $matchingRide->id)
+            ->assertJsonPath('data.0.location.system_key', 'watopia')
+            ->assertJsonPath('data.0.location.map_provider', 'watopia')
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonMissing(['name' => 'Outdoor Ride']);
+    }
+
     public function test_user_can_filter_rides_by_date_bounds_and_location(): void
     {
         $user = User::factory()->create();
@@ -492,6 +522,35 @@ class RideEndpointsTest extends TestCase
 
         $this->assertCount(1, $fitFiles);
         $this->assertCount(1, $imageFiles);
+    }
+
+    public function test_user_can_create_ride_for_watopia_location(): void
+    {
+        Storage::fake('local');
+        Artisan::shouldReceive('call')
+            ->once()
+            ->with('ride:process-fit', \Mockery::on(fn (array $arguments): bool => isset($arguments['ride'], $arguments['fitPath'])))
+            ->andReturn(0);
+
+        $user = User::factory()->create();
+        $watopia = Location::factory()->watopia()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/rides', [
+            'name' => 'Watopia Spin',
+            'location_id' => $watopia->id,
+            'fit_file' => UploadedFile::fake()->create('watopia.fit', 10, 'application/octet-stream'),
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.name', 'Watopia Spin')
+            ->assertJsonPath('data.user_id', $user->id)
+            ->assertJsonPath('data.location_id', $watopia->id);
+
+        $this->assertDatabaseHas('rides', [
+            'name' => 'Watopia Spin',
+            'user_id' => $user->id,
+            'location_id' => $watopia->id,
+        ]);
     }
 
     public function test_user_cannot_create_ride_for_another_users_location(): void

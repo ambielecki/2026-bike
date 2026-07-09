@@ -85,8 +85,19 @@ describe('AddRideView', () => {
         id: 1,
         name: 'North Park',
         user_id: 1,
+        system_key: null,
+        map_provider: 'openstreetmap' as const,
         latitude: '40.000000',
         longitude: '-79.000000',
+      },
+      {
+        id: 2,
+        name: 'Watopia',
+        user_id: null,
+        system_key: 'watopia',
+        map_provider: 'watopia' as const,
+        latitude: '-11.683420',
+        longitude: '166.955010',
       },
     ])
 
@@ -94,6 +105,7 @@ describe('AddRideView', () => {
 
     expect(mockedGetLocations).toHaveBeenCalledOnce()
     expect(wrapper.find('#ride-location').text()).toContain('North Park')
+    expect(wrapper.find('#ride-location').text()).toContain('Watopia')
   })
 
   it('validates required ride fields', async () => {
@@ -117,6 +129,8 @@ describe('AddRideView', () => {
           id: 12,
           name: 'River Loop',
           user_id: 1,
+          system_key: null,
+          map_provider: 'openstreetmap' as const,
           latitude: '40.100000',
           longitude: '-79.100000',
         },
@@ -125,6 +139,8 @@ describe('AddRideView', () => {
       id: 12,
       name: 'River Loop',
       user_id: 1,
+      system_key: null,
+      map_provider: 'openstreetmap' as const,
       latitude: '40.100000',
       longitude: '-79.100000',
     })
@@ -153,6 +169,8 @@ describe('AddRideView', () => {
         id: 1,
         name: 'North Park',
         user_id: 1,
+        system_key: null,
+        map_provider: 'openstreetmap' as const,
         latitude: '40.000000',
         longitude: '-79.000000',
       },
