@@ -1,10 +1,19 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
+import AuthTextField from '@/components/auth/AuthTextField.vue'
+import AppTextarea from '@/components/form/AppTextarea.vue'
 import RideRouteMap from '@/components/map/RideRouteMap.vue'
 import { ApiError } from '@/services/api'
-import { getRide, type RideDetails, type RoutePoint } from '@/services/rides'
+import {
+  deleteRide,
+  getRide,
+  updateRide,
+  type RideDetails,
+  type RoutePoint,
+} from '@/services/rides'
+import { useToastStore } from '@/stores/toasts'
 
 interface MapRoute {
   id: string
@@ -15,6 +24,8 @@ interface MapRoute {
 }
 
 const route = useRoute()
+const router = useRouter()
+const toastStore = useToastStore()
 
 const ride = ref<RideDetails | null>(null)
 const formError = ref('')
@@ -22,6 +33,15 @@ const isLoading = ref(false)
 const routeColor = ref('#1f7a4d')
 const routeOpacity = ref(0.75)
 const routeVisible = ref(true)
+const isEditModalOpen = ref(false)
+const editName = ref('')
+const editDescription = ref('')
+const editNameError = ref('')
+const editFormError = ref('')
+const isSaving = ref(false)
+const isDeleteModalOpen = ref(false)
+const deleteFormError = ref('')
+const isDeleting = ref(false)
 
 const mapRoutes = computed<MapRoute[]>(() => {
   if (!ride.value) {
@@ -41,7 +61,9 @@ const mapRoutes = computed<MapRoute[]>(() => {
 
 const mapCenter = computed(() => {
   const locationLatitude = ride.value?.location ? Number(ride.value.location.latitude) : Number.NaN
-  const locationLongitude = ride.value?.location ? Number(ride.value.location.longitude) : Number.NaN
+  const locationLongitude = ride.value?.location
+    ? Number(ride.value.location.longitude)
+    : Number.NaN
 
   if (Number.isFinite(locationLatitude) && Number.isFinite(locationLongitude)) {
     return {
@@ -67,6 +89,91 @@ async function loadRide() {
     formError.value = error instanceof ApiError ? error.message : 'Unable to load ride.'
   } finally {
     isLoading.value = false
+  }
+}
+
+function openEditModal() {
+  if (!ride.value) {
+    return
+  }
+
+  editName.value = ride.value.name
+  editDescription.value = ride.value.description ?? ''
+  editNameError.value = ''
+  editFormError.value = ''
+  isEditModalOpen.value = true
+}
+
+function closeEditModal() {
+  if (isSaving.value) {
+    return
+  }
+
+  isEditModalOpen.value = false
+}
+
+async function submitEdit() {
+  editFormError.value = ''
+
+  if (!validateEditName() || !ride.value) {
+    return
+  }
+
+  isSaving.value = true
+
+  try {
+    ride.value = await updateRide(ride.value.id, {
+      name: editName.value.trim(),
+      description: editDescription.value.trim() || null,
+    })
+    isEditModalOpen.value = false
+    toastStore.success('Ride updated')
+  } catch (error) {
+    editFormError.value = error instanceof ApiError ? error.message : 'Unable to update ride.'
+  } finally {
+    isSaving.value = false
+  }
+}
+
+function validateEditName() {
+  if (!editName.value.trim()) {
+    editNameError.value = 'Name is required.'
+    return false
+  }
+
+  editNameError.value = ''
+  return true
+}
+
+function openDeleteModal() {
+  deleteFormError.value = ''
+  isDeleteModalOpen.value = true
+}
+
+function closeDeleteModal() {
+  if (isDeleting.value) {
+    return
+  }
+
+  isDeleteModalOpen.value = false
+}
+
+async function confirmDelete() {
+  if (!ride.value) {
+    return
+  }
+
+  deleteFormError.value = ''
+  isDeleting.value = true
+
+  try {
+    await deleteRide(ride.value.id)
+    toastStore.success('Ride deleted')
+    await router.push({ name: 'rides' })
+  } catch (error) {
+    deleteFormError.value = error instanceof ApiError ? error.message : 'Unable to delete ride.'
+  } finally {
+    isDeleting.value = false
   }
 }
 
@@ -128,7 +235,13 @@ function formatDuration(value: string | null) {
     <template v-else-if="ride">
       <section class="page-header">
         <RouterLink class="back-link" :to="{ name: 'rides' }">Back to rides</RouterLink>
-        <h1>{{ ride.name }}</h1>
+        <div class="title-row">
+          <h1>{{ ride.name }}</h1>
+          <div class="header-actions" aria-label="Ride actions">
+            <button class="secondary-action" type="button" @click="openEditModal">Edit</button>
+            <button class="danger-action" type="button" @click="openDeleteModal">Delete</button>
+          </div>
+        </div>
       </section>
 
       <section class="details-layout">
@@ -161,6 +274,13 @@ function formatDuration(value: string | null) {
         </div>
 
         <aside class="details-panel" aria-label="Ride details">
+          <img
+            v-if="ride.image_url"
+            class="ride-image"
+            :alt="`${ride.name} ride image`"
+            :src="ride.image_url"
+          />
+
           <p v-if="ride.description" class="description">{{ ride.description }}</p>
 
           <dl class="metrics">
@@ -195,6 +315,106 @@ function formatDuration(value: string | null) {
           </dl>
         </aside>
       </section>
+
+      <div v-if="isEditModalOpen" class="modal-layer" role="presentation">
+        <button
+          class="modal-backdrop"
+          type="button"
+          aria-label="Close edit form"
+          @click="closeEditModal"
+        ></button>
+
+        <section
+          class="modal-panel"
+          aria-labelledby="edit-ride-title"
+          aria-modal="true"
+          role="dialog"
+        >
+          <div class="modal-header">
+            <h2 id="edit-ride-title">Edit Ride</h2>
+            <button
+              class="close-button"
+              type="button"
+              aria-label="Close edit form"
+              @click="closeEditModal"
+            >
+              ×
+            </button>
+          </div>
+
+          <p v-if="editFormError" class="form-error" role="alert">
+            {{ editFormError }}
+          </p>
+
+          <form class="modal-form" novalidate @submit.prevent="submitEdit">
+            <AuthTextField
+              id="edit-ride-name"
+              v-model="editName"
+              :error="editNameError"
+              label="Name"
+            />
+            <AppTextarea
+              id="edit-ride-description"
+              v-model="editDescription"
+              label="Description"
+              :rows="5"
+            />
+
+            <div class="modal-actions">
+              <button class="secondary-action" type="button" @click="closeEditModal">Cancel</button>
+              <button class="primary-action" :disabled="isSaving" type="submit">
+                {{ isSaving ? 'Saving...' : 'Save Ride' }}
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <div v-if="isDeleteModalOpen" class="modal-layer" role="presentation">
+        <button
+          class="modal-backdrop"
+          type="button"
+          aria-label="Close delete confirmation"
+          @click="closeDeleteModal"
+        ></button>
+
+        <section
+          class="modal-panel"
+          aria-labelledby="delete-ride-title"
+          aria-modal="true"
+          role="dialog"
+        >
+          <div class="modal-header">
+            <h2 id="delete-ride-title">Delete Ride</h2>
+            <button
+              class="close-button"
+              type="button"
+              aria-label="Close delete confirmation"
+              @click="closeDeleteModal"
+            >
+              ×
+            </button>
+          </div>
+
+          <p class="confirm-text">Delete {{ ride.name }}? This cannot be undone.</p>
+
+          <p v-if="deleteFormError" class="form-error" role="alert">
+            {{ deleteFormError }}
+          </p>
+
+          <div class="modal-actions">
+            <button class="secondary-action" type="button" @click="closeDeleteModal">Cancel</button>
+            <button
+              class="danger-action"
+              :disabled="isDeleting"
+              type="button"
+              @click="confirmDelete"
+            >
+              {{ isDeleting ? 'Deleting...' : 'Delete Ride' }}
+            </button>
+          </div>
+        </section>
+      </div>
     </template>
   </main>
 </template>
@@ -222,6 +442,7 @@ function formatDuration(value: string | null) {
 }
 
 h1,
+h2,
 p,
 dl,
 dd {
@@ -235,11 +456,31 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+h2 {
+  color: #142013;
+  font-size: 1.25rem;
+  line-height: 1.3;
+}
+
 .back-link {
   color: #355e3b;
   font-weight: 800;
   justify-self: start;
   text-decoration: none;
+}
+
+.title-row {
+  align-items: start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
 }
 
 .details-layout {
@@ -302,6 +543,57 @@ h1 {
   padding: 1.25rem;
 }
 
+.primary-action,
+.secondary-action,
+.danger-action {
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+}
+
+.primary-action {
+  background: #355e3b;
+  border: 0;
+  color: #ffffff;
+}
+
+.primary-action:hover:not(:disabled) {
+  background: #29492e;
+}
+
+.secondary-action {
+  background: #ffffff;
+  border: 0.0625rem solid rgba(53, 94, 59, 0.32);
+  color: #29492e;
+}
+
+.danger-action {
+  background: #9f2d2d;
+  border: 0;
+  color: #ffffff;
+}
+
+.danger-action:hover:not(:disabled) {
+  background: #7c2020;
+}
+
+.primary-action:disabled,
+.danger-action:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.ride-image {
+  aspect-ratio: 4 / 3;
+  border-radius: 0.375rem;
+  display: block;
+  object-fit: cover;
+  width: 100%;
+}
+
 .description {
   color: #142013;
   line-height: 1.6;
@@ -349,7 +641,79 @@ dd {
   padding: 0.75rem;
 }
 
+.modal-layer {
+  align-items: center;
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1rem;
+  position: fixed;
+  z-index: 50;
+}
+
+.modal-backdrop {
+  background: rgba(20, 32, 19, 0.42);
+  border: 0;
+  inset: 0;
+  position: fixed;
+}
+
+.modal-panel {
+  background: #fffdf7;
+  border: 0.0625rem solid rgba(53, 94, 59, 0.14);
+  border-radius: 0.5rem;
+  box-shadow: 0 1rem 2rem rgba(20, 32, 19, 0.08);
+  display: grid;
+  gap: 1.125rem;
+  max-width: 32rem;
+  padding: 1.25rem;
+  position: relative;
+  width: min(100%, 32rem);
+}
+
+.modal-header,
+.modal-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.close-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 0.375rem;
+  color: #142013;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1.75rem;
+  height: 2.5rem;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  width: 2.5rem;
+}
+
+.modal-form {
+  display: grid;
+  gap: 1.125rem;
+}
+
+.modal-actions {
+  justify-content: flex-end;
+}
+
+.confirm-text {
+  color: #142013;
+  line-height: 1.5;
+}
+
 .back-link:focus-visible,
+.primary-action:focus-visible,
+.secondary-action:focus-visible,
+.danger-action:focus-visible,
+.close-button:focus-visible,
 .control-field input:focus-visible,
 .toggle-field input:focus-visible {
   outline: 0.1875rem solid rgba(53, 94, 59, 0.28);
@@ -360,6 +724,22 @@ dd {
   .details-layout,
   .route-controls {
     grid-template-columns: 1fr;
+  }
+
+  .title-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .header-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 40rem) {
+  .modal-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
   }
 }
 </style>

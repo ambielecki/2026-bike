@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\IndexRideRequest;
 use App\Http\Requests\StoreRideRequest;
+use App\Http\Requests\UpdateRideRequest;
 use App\Models\Ride;
 use App\Models\RideImage;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -130,28 +132,75 @@ class RideController extends Controller
         ]);
 
         return response()->json([
-            'data' => [
-                'id' => $ride->id,
-                'name' => $ride->name,
-                'description' => $ride->description,
-                'datetime' => $ride->datetime?->toISOString(),
-                'distance' => $ride->distance,
-                'total_time' => $ride->total_time,
-                'moving_time' => $ride->moving_time,
-                'average_speed' => $ride->average_speed,
-                'max_speed' => $ride->max_speed,
-                'route_data' => $ride->route_data ?? [],
-                'location' => $ride->location ? [
-                    'id' => $ride->location->id,
-                    'name' => $ride->location->name,
-                    'latitude' => $ride->location->latitude,
-                    'longitude' => $ride->location->longitude,
-                ] : null,
-            ],
+            'data' => $this->detailsData($ride),
         ]);
     }
 
+    public function update(UpdateRideRequest $request, Ride $ride): JsonResponse
+    {
+        abort_unless($ride->user_id === $request->user()?->id, 404);
+
+        $validated = $request->validated();
+
+        $ride->update([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+        ]);
+
+        $ride->load([
+            'location:id,name,latitude,longitude',
+            'images' => fn ($query) => $query->oldest('id'),
+        ]);
+
+        return response()->json([
+            'data' => $this->detailsData($ride),
+        ]);
+    }
+
+    public function destroy(Ride $ride): Response
+    {
+        abort_unless($ride->user_id === request()->user()?->id, 404);
+
+        $ride->delete();
+
+        Storage::deleteDirectory("ride-fit/{$ride->id}");
+        Storage::disk('public')->deleteDirectory("rides/{$ride->id}");
+
+        return response()->noContent();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function detailsData(Ride $ride): array
+    {
+        return [
+            'id' => $ride->id,
+            'name' => $ride->name,
+            'description' => $ride->description,
+            'datetime' => $ride->datetime?->toISOString(),
+            'distance' => $ride->distance,
+            'total_time' => $ride->total_time,
+            'moving_time' => $ride->moving_time,
+            'average_speed' => $ride->average_speed,
+            'max_speed' => $ride->max_speed,
+            'route_data' => $ride->route_data ?? [],
+            'location' => $ride->location ? [
+                'id' => $ride->location->id,
+                'name' => $ride->location->name,
+                'latitude' => $ride->location->latitude,
+                'longitude' => $ride->location->longitude,
+            ] : null,
+            'image_url' => $this->imageUrl($ride, 'medium'),
+        ];
+    }
+
     private function thumbnailUrl(Ride $ride): ?string
+    {
+        return $this->imageUrl($ride, 'small');
+    }
+
+    private function imageUrl(Ride $ride, string $preferredSize): ?string
     {
         $image = $ride->images->first();
 
@@ -159,7 +208,7 @@ class RideController extends Controller
             return null;
         }
 
-        $size = $image->has_sizes ? 'small' : 'original';
+        $size = $image->has_sizes ? $preferredSize : 'original';
 
         return Storage::disk('public')->url("rides/{$ride->id}/images/{$size}/{$image->name}");
     }

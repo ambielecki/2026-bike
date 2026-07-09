@@ -45,6 +45,7 @@ export interface RideDetails {
   average_speed: string | null
   max_speed: string | null
   route_data: RoutePoint[]
+  image_url: string | null
   location: {
     id: number
     name: string
@@ -91,6 +92,11 @@ export interface CreateRidePayload {
   locationId: number
   fitFile: File
   imageFile: File | null
+}
+
+export interface UpdateRidePayload {
+  name: string
+  description: string | null
 }
 
 export async function getLocations() {
@@ -168,4 +174,14 @@ export async function createRide(payload: CreateRidePayload) {
   const response = await api.post<ApiData<Ride>>('/api/rides', formData)
 
   return response.data
+}
+
+export async function updateRide(id: string | number, payload: UpdateRidePayload) {
+  const response = await api.patch<ApiData<RideDetails>>(`/api/rides/${id}`, payload)
+
+  return response.data
+}
+
+export async function deleteRide(id: string | number) {
+  await api.delete<void>(`/api/rides/${id}`)
 }

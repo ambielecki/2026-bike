@@ -45,6 +45,7 @@ declare module 'leaflet' {
   export function map(
     element: HTMLElement,
     options?: {
+      fullscreenControl?: boolean
       scrollWheelZoom?: boolean
     },
   ): Map
@@ -55,3 +56,5 @@ declare module 'leaflet' {
   ): { addTo(layer: LayerGroup): unknown }
   export function tileLayer(urlTemplate: string, options?: TileLayerOptions): { addTo(map: Map): unknown }
 }
+
+declare module 'leaflet.fullscreen'

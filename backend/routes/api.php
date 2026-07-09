@@ -23,6 +23,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/rides', [RideController::class, 'index']);
     Route::post('/rides', [RideController::class, 'store']);
     Route::get('/rides/{ride}', [RideController::class, 'show']);
+    Route::patch('/rides/{ride}', [RideController::class, 'update']);
+    Route::delete('/rides/{ride}', [RideController::class, 'destroy']);
 });
 
 if (strcasecmp((string) Config::get('app.env'), 'production') !== 0) {

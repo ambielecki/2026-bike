@@ -95,6 +95,7 @@ function rideDetails(overrides = {}) {
     moving_time: '3600.00',
     average_speed: '12.10',
     max_speed: '24.20',
+    image_url: null,
     route_data: [
       {
         latitude: 40.1,

@@ -4,19 +4,24 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createWebHistory } from 'vue-router'
 
 import { ApiError } from '@/services/api'
-import { getRide } from '@/services/rides'
+import { deleteRide, getRide, updateRide } from '@/services/rides'
 import PlaceholderView from '@/views/PlaceholderView.vue'
 import RideDetailsView from '@/views/RideDetailsView.vue'
 
 vi.mock('@/services/rides', () => ({
+  deleteRide: vi.fn(),
   getRide: vi.fn(),
+  updateRide: vi.fn(),
 }))
 
+const mockedDeleteRide = vi.mocked(deleteRide)
 const mockedGetRide = vi.mocked(getRide)
+const mockedUpdateRide = vi.mocked(updateRide)
 
 const routeMapStub = {
   props: ['center', 'opacity', 'routes'],
-  template: '<div class="route-map-stub" :data-opacity="opacity">{{ routes.length }} route overlays</div>',
+  template:
+    '<div class="route-map-stub" :data-opacity="opacity">{{ routes.length }} route overlays</div>',
 }
 
 async function mountRideDetailsView(id = '10') {
@@ -73,6 +78,7 @@ function rideDetails(overrides = {}) {
     moving_time: '3600.00',
     average_speed: '11.10',
     max_speed: '22.20',
+    image_url: 'http://example.test/storage/rides/10/images/medium/photo.jpg',
     route_data: [
       {
         latitude: 40.1,
@@ -97,6 +103,13 @@ describe('RideDetailsView', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     mockedGetRide.mockResolvedValue(rideDetails())
+    mockedUpdateRide.mockResolvedValue(
+      rideDetails({
+        name: 'Updated Ride',
+        description: 'Updated description.',
+      }),
+    )
+    mockedDeleteRide.mockResolvedValue()
   })
 
   it('loads and renders ride details', async () => {
@@ -112,6 +125,10 @@ describe('RideDetailsView', () => {
     expect(wrapper.text()).toContain('11.10 mph')
     expect(wrapper.text()).toContain('22.20 mph')
     expect(wrapper.find('.route-map-stub').text()).toContain('1 route overlays')
+    expect(wrapper.find('.ride-image').attributes('src')).toBe(
+      'http://example.test/storage/rides/10/images/medium/photo.jpg',
+    )
+    expect(wrapper.find('.ride-image').attributes('alt')).toBe('Morning Ride ride image')
 
     const map = wrapper.findComponent(routeMapStub)
     expect(map.props('center')).toEqual({
@@ -121,9 +138,11 @@ describe('RideDetailsView', () => {
   })
 
   it('centers on the first route point when the ride location is missing', async () => {
-    mockedGetRide.mockResolvedValueOnce(rideDetails({
-      location: null,
-    }))
+    mockedGetRide.mockResolvedValueOnce(
+      rideDetails({
+        location: null,
+      }),
+    )
 
     const { wrapper } = await mountRideDetailsView()
 
@@ -135,9 +154,11 @@ describe('RideDetailsView', () => {
   })
 
   it('renders pending route state through the map component when route data is empty', async () => {
-    mockedGetRide.mockResolvedValueOnce(rideDetails({
-      route_data: [],
-    }))
+    mockedGetRide.mockResolvedValueOnce(
+      rideDetails({
+        route_data: [],
+      }),
+    )
 
     const { wrapper } = await mountRideDetailsView()
 
@@ -148,6 +169,18 @@ describe('RideDetailsView', () => {
         visible: true,
       },
     ])
+  })
+
+  it('does not render a ride image when no image URL is present', async () => {
+    mockedGetRide.mockResolvedValueOnce(
+      rideDetails({
+        image_url: null,
+      }),
+    )
+
+    const { wrapper } = await mountRideDetailsView()
+
+    expect(wrapper.find('.ride-image').exists()).toBe(false)
   })
 
   it('updates route color opacity and visibility controls', async () => {
@@ -168,6 +201,74 @@ describe('RideDetailsView', () => {
     ])
   })
 
+  it('updates ride name and description from the edit modal', async () => {
+    const { wrapper } = await mountRideDetailsView()
+
+    await buttonByText(wrapper, 'Edit').trigger('click')
+    await wrapper.find('#edit-ride-name').setValue('Updated Ride')
+    await wrapper.find('#edit-ride-description').setValue('Updated description.')
+    await wrapper.find('form.modal-form').trigger('submit')
+    await flushPromises()
+
+    expect(mockedUpdateRide).toHaveBeenCalledWith(10, {
+      name: 'Updated Ride',
+      description: 'Updated description.',
+    })
+    expect(wrapper.find('.modal-panel').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Updated Ride')
+    expect(wrapper.text()).toContain('Updated description.')
+  })
+
+  it('requires a ride name when editing', async () => {
+    const { wrapper } = await mountRideDetailsView()
+
+    await buttonByText(wrapper, 'Edit').trigger('click')
+    await wrapper.find('#edit-ride-name').setValue('   ')
+    await wrapper.find('form.modal-form').trigger('submit')
+    await flushPromises()
+
+    expect(mockedUpdateRide).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('Name is required.')
+  })
+
+  it('renders update errors in the edit modal', async () => {
+    mockedUpdateRide.mockRejectedValueOnce(new ApiError(422, 'The name field is required.'))
+    const { wrapper } = await mountRideDetailsView()
+
+    await buttonByText(wrapper, 'Edit').trigger('click')
+    await wrapper.find('#edit-ride-name').setValue('Updated Ride')
+    await wrapper.find('form.modal-form').trigger('submit')
+    await flushPromises()
+
+    expect(wrapper.find('.modal-panel').exists()).toBe(true)
+    expect(wrapper.text()).toContain('The name field is required.')
+  })
+
+  it('deletes a ride after confirmation and returns to the ride list', async () => {
+    const { router, wrapper } = await mountRideDetailsView()
+
+    await buttonByText(wrapper, 'Delete').trigger('click')
+    expect(wrapper.text()).toContain('Delete Morning Ride? This cannot be undone.')
+
+    await buttonByText(wrapper, 'Delete Ride').trigger('click')
+    await flushPromises()
+
+    expect(mockedDeleteRide).toHaveBeenCalledWith(10)
+    expect(router.currentRoute.value.name).toBe('rides')
+  })
+
+  it('renders delete errors in the confirmation modal', async () => {
+    mockedDeleteRide.mockRejectedValueOnce(new ApiError(500, 'Unable to delete ride.'))
+    const { wrapper } = await mountRideDetailsView()
+
+    await buttonByText(wrapper, 'Delete').trigger('click')
+    await buttonByText(wrapper, 'Delete Ride').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('.modal-panel').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Unable to delete ride.')
+  })
+
   it('renders API errors', async () => {
     mockedGetRide.mockRejectedValueOnce(new ApiError(404, 'Not found.'))
 
@@ -176,3 +277,13 @@ describe('RideDetailsView', () => {
     expect(wrapper.text()).toContain('Not found.')
   })
 })
+
+function buttonByText(wrapper: ReturnType<typeof mount>, text: string) {
+  const button = wrapper.findAll('button').find((item) => item.text() === text)
+
+  if (!button) {
+    throw new Error(`Button not found: ${text}`)
+  }
+
+  return button
+}

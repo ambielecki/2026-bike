@@ -1,5 +1,7 @@
 import { useToastStore } from '@/stores/toasts'
 import { pinia } from '@/plugins/pinia'
+import router from '@/router'
+import { useAuthStore } from '@/stores/auth'
 
 interface ApiRequestOptions extends RequestInit {
   suppressNotFoundToast?: boolean
@@ -249,10 +251,6 @@ function handleErrorToast(
 }
 
 async function handleUnauthenticatedResponse() {
-  const [{ useAuthStore }, { default: router }] = await Promise.all([
-    import('@/stores/auth'),
-    import('@/router'),
-  ])
   const authStore = useAuthStore(pinia)
   const toastStore = useToastStore(pinia)
 

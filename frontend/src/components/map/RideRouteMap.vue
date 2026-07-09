@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import 'leaflet/dist/leaflet.css'
+import 'leaflet.fullscreen'
+import 'leaflet.fullscreen/dist/Control.FullScreen.css'
 
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { latLng, layerGroup, map as createMap, marker, polyline, tileLayer, type LayerGroup, type Map } from 'leaflet'
@@ -48,6 +50,7 @@ onMounted(async () => {
   }
 
   map = createMap(mapElement.value, {
+    fullscreenControl: true,
     scrollWheelZoom: true,
   }).setView([39.5, -98.35], 12)
 

@@ -64,8 +64,15 @@ class RideEndpointsTest extends TestCase
                 ['latitude' => 40.2, 'longitude' => -79.2],
             ],
         ]);
+        RideImage::factory()->create([
+            'ride_id' => $ride->id,
+            'user_id' => $user->id,
+            'name' => 'first.jpg',
+            'has_sizes' => true,
+        ]);
 
         $response = $this->actingAs($user)->getJson("/api/rides/{$ride->id}");
+        $storageUrl = Config::get('filesystems.disks.public.url');
 
         $response->assertOk()
             ->assertJsonPath('data.id', $ride->id)
@@ -78,7 +85,41 @@ class RideEndpointsTest extends TestCase
             ->assertJsonPath('data.max_speed', '22.20')
             ->assertJsonPath('data.location.name', 'North Park')
             ->assertJsonPath('data.route_data.0.latitude', 40.1)
-            ->assertJsonPath('data.route_data.1.longitude', -79.2);
+            ->assertJsonPath('data.route_data.1.longitude', -79.2)
+            ->assertJsonPath('data.image_url', "{$storageUrl}/rides/{$ride->id}/images/medium/first.jpg");
+    }
+
+    public function test_ride_details_image_url_uses_original_when_sizes_are_missing(): void
+    {
+        $user = User::factory()->create();
+        $ride = Ride::factory()->create([
+            'user_id' => $user->id,
+        ]);
+        RideImage::factory()->create([
+            'ride_id' => $ride->id,
+            'user_id' => $user->id,
+            'name' => 'original.jpg',
+            'has_sizes' => false,
+        ]);
+
+        $response = $this->actingAs($user)->getJson("/api/rides/{$ride->id}");
+        $storageUrl = Config::get('filesystems.disks.public.url');
+
+        $response->assertOk()
+            ->assertJsonPath('data.image_url', "{$storageUrl}/rides/{$ride->id}/images/original/original.jpg");
+    }
+
+    public function test_ride_details_image_url_is_null_without_images(): void
+    {
+        $user = User::factory()->create();
+        $ride = Ride::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->getJson("/api/rides/{$ride->id}");
+
+        $response->assertOk()
+            ->assertJsonPath('data.image_url', null);
     }
 
     public function test_user_cannot_view_another_users_ride_details(): void
@@ -89,6 +130,146 @@ class RideEndpointsTest extends TestCase
         $response = $this->actingAs($user)->getJson("/api/rides/{$otherRide->id}");
 
         $response->assertNotFound();
+    }
+
+    public function test_guest_cannot_update_ride(): void
+    {
+        $ride = Ride::factory()->create();
+
+        $response = $this->patchJson("/api/rides/{$ride->id}", [
+            'name' => 'Updated Ride',
+        ]);
+
+        $response->assertUnauthorized();
+    }
+
+    public function test_user_can_update_their_ride_name_and_description(): void
+    {
+        $user = User::factory()->create();
+        $ride = Ride::factory()->create([
+            'name' => 'Original Ride',
+            'description' => 'Original description.',
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->patchJson("/api/rides/{$ride->id}", [
+            'name' => 'Updated Ride',
+            'description' => 'Updated description.',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.id', $ride->id)
+            ->assertJsonPath('data.name', 'Updated Ride')
+            ->assertJsonPath('data.description', 'Updated description.');
+
+        $this->assertDatabaseHas('rides', [
+            'id' => $ride->id,
+            'name' => 'Updated Ride',
+            'description' => 'Updated description.',
+        ]);
+    }
+
+    public function test_user_can_clear_ride_description(): void
+    {
+        $user = User::factory()->create();
+        $ride = Ride::factory()->create([
+            'description' => 'Original description.',
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->patchJson("/api/rides/{$ride->id}", [
+            'name' => 'Updated Ride',
+            'description' => null,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.description', null);
+
+        $this->assertDatabaseHas('rides', [
+            'id' => $ride->id,
+            'description' => null,
+        ]);
+    }
+
+    public function test_user_cannot_update_another_users_ride(): void
+    {
+        $user = User::factory()->create();
+        $otherRide = Ride::factory()->create([
+            'name' => 'Other Ride',
+        ]);
+
+        $response = $this->actingAs($user)->patchJson("/api/rides/{$otherRide->id}", [
+            'name' => 'Updated Ride',
+        ]);
+
+        $response->assertNotFound();
+
+        $this->assertDatabaseHas('rides', [
+            'id' => $otherRide->id,
+            'name' => 'Other Ride',
+        ]);
+    }
+
+    public function test_ride_update_rejects_invalid_data(): void
+    {
+        $user = User::factory()->create();
+        $ride = Ride::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->patchJson("/api/rides/{$ride->id}", [
+            'name' => '',
+        ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['name']);
+    }
+
+    public function test_guest_cannot_delete_ride(): void
+    {
+        $ride = Ride::factory()->create();
+
+        $response = $this->deleteJson("/api/rides/{$ride->id}");
+
+        $response->assertUnauthorized();
+    }
+
+    public function test_user_can_delete_their_ride(): void
+    {
+        Storage::fake('local');
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $ride = Ride::factory()->create([
+            'user_id' => $user->id,
+        ]);
+        RideImage::factory()->create([
+            'ride_id' => $ride->id,
+            'user_id' => $user->id,
+            'name' => 'photo.jpg',
+        ]);
+
+        Storage::put("ride-fit/{$ride->id}/ride.fit", 'fit contents');
+        Storage::disk('public')->put("rides/{$ride->id}/images/original/photo.jpg", 'image contents');
+
+        $response = $this->actingAs($user)->deleteJson("/api/rides/{$ride->id}");
+
+        $response->assertNoContent();
+        $this->assertDatabaseMissing('rides', ['id' => $ride->id]);
+        $this->assertDatabaseMissing('images', ['ride_id' => $ride->id]);
+        Storage::assertMissing("ride-fit/{$ride->id}/ride.fit");
+        Storage::disk('public')->assertMissing("rides/{$ride->id}/images/original/photo.jpg");
+    }
+
+    public function test_user_cannot_delete_another_users_ride(): void
+    {
+        $user = User::factory()->create();
+        $otherRide = Ride::factory()->create();
+
+        $response = $this->actingAs($user)->deleteJson("/api/rides/{$otherRide->id}");
+
+        $response->assertNotFound();
+        $this->assertDatabaseHas('rides', ['id' => $otherRide->id]);
     }
 
     public function test_user_can_list_only_their_rides(): void

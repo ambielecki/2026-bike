@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import { marker } from 'leaflet'
+import { map as createMap, marker } from 'leaflet'
 
 import RideRouteMap from '@/components/map/RideRouteMap.vue'
 
@@ -31,6 +31,7 @@ vi.mock('leaflet', () => ({
     addTo: addToMock,
   })),
 }))
+vi.mock('leaflet.fullscreen', () => ({}))
 
 const route = {
   id: 'ride-1',
@@ -48,6 +49,7 @@ const route = {
   ],
   visible: true,
 }
+const createMapMock = vi.mocked(createMap)
 const markerMock = vi.mocked(marker)
 
 describe('RideRouteMap', () => {
@@ -68,6 +70,10 @@ describe('RideRouteMap', () => {
 
     await flushPromises()
 
+    expect(createMapMock).toHaveBeenCalledWith(expect.any(HTMLElement), {
+      fullscreenControl: true,
+      scrollWheelZoom: true,
+    })
     expect(setViewMock).toHaveBeenCalledWith([40, -79], 13)
   })
 

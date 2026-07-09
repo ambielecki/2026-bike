@@ -1,8 +1,17 @@
 import { createApp } from 'vue'
-import 'vuetify/styles';
-import { createVuetify } from 'vuetify';
-import * as components from 'vuetify/components';
-import * as directives from 'vuetify/directives';
+import 'vuetify/styles'
+import { createVuetify } from 'vuetify'
+import {
+  VApp,
+  VBtn,
+  VCard,
+  VCol,
+  VContainer,
+  VDivider,
+  VMain,
+  VRow,
+  VSheet,
+} from 'vuetify/components'
 
 import App from './App.vue'
 import { pinia } from './plugins/pinia'
@@ -14,10 +23,19 @@ app.use(pinia)
 app.use(router)
 
 const vuetify = createVuetify({
-  components,
-  directives,
-});
+  components: {
+    VApp,
+    VBtn,
+    VCard,
+    VCol,
+    VContainer,
+    VDivider,
+    VMain,
+    VRow,
+    VSheet,
+  },
+})
 
-app.use(vuetify);
+app.use(vuetify)
 
 app.mount('#app')
