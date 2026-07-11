@@ -210,11 +210,6 @@ function formatTotalTime(value: string | null) {
       <p v-else-if="rides.length === 0" class="status-text">No rides match these filters.</p>
 
       <article v-for="ride in rides" v-else :key="ride.id" class="ride-row">
-        <div class="thumbnail-frame">
-          <img v-if="ride.thumbnail_url" :alt="`${ride.name} thumbnail`" :src="ride.thumbnail_url" />
-          <span v-else aria-hidden="true">BM</span>
-        </div>
-
         <div class="ride-summary">
           <RouterLink class="ride-title" :to="{ name: 'ride-details', params: { id: ride.id } }">
             {{ ride.name }}
@@ -329,29 +324,8 @@ h1 {
   background: #fffdf7;
   border: 0.0625rem solid rgba(53, 94, 59, 0.14);
   border-radius: 0.5rem;
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: 5rem minmax(0, 1fr);
   min-height: 6rem;
-  padding: 0.75rem;
-}
-
-.thumbnail-frame {
-  align-items: center;
-  aspect-ratio: 1;
-  background: rgba(53, 94, 59, 0.1);
-  border-radius: 0.375rem;
-  color: #355e3b;
-  display: flex;
-  font-weight: 800;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.thumbnail-frame img {
-  height: 100%;
-  object-fit: cover;
-  width: 100%;
+  padding: 1rem;
 }
 
 .ride-summary {

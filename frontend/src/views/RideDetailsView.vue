@@ -282,13 +282,6 @@ function formatDuration(value: string | null) {
         </div>
 
         <aside class="details-panel" aria-label="Ride details">
-          <img
-            v-if="ride.image_url"
-            class="ride-image"
-            :alt="`${ride.name} ride image`"
-            :src="ride.image_url"
-          />
-
           <p v-if="ride.description" class="description">{{ ride.description }}</p>
 
           <dl class="metrics">
@@ -592,14 +585,6 @@ h2 {
 .danger-action:disabled {
   cursor: wait;
   opacity: 0.72;
-}
-
-.ride-image {
-  aspect-ratio: 4 / 3;
-  border-radius: 0.375rem;
-  display: block;
-  object-fit: cover;
-  width: 100%;
 }
 
 .description {

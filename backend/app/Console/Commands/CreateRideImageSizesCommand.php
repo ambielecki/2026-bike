@@ -26,7 +26,7 @@ class CreateRideImageSizesCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Create small, medium, and large sizes for a ride image.';
+    protected $description = 'Create small, medium, and large sizes for an image record.';
 
     public function handle(): int
     {
@@ -65,6 +65,7 @@ class CreateRideImageSizesCommand extends Command
 
         if ($imageSize === false || ! function_exists('imagecreatetruecolor')) {
             copy($source, $target);
+
             return;
         }
 
@@ -77,6 +78,7 @@ class CreateRideImageSizesCommand extends Command
 
         if ($sourceImage === null || $sourceImage === false) {
             copy($source, $target);
+
             return;
         }
 
@@ -117,7 +119,7 @@ class CreateRideImageSizesCommand extends Command
     }
 
     /**
-     * @param \GdImage $image
+     * @param  \GdImage  $image
      */
     private function saveImageResource($image, string $target, int $type): void
     {

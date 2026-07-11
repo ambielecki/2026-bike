@@ -185,13 +185,11 @@ describe('AddRideView', () => {
 
     const { router, toastStore, wrapper } = await mountAddRideView()
     const fitFile = makeFile('activity.fit')
-    const imageFile = makeFile('photo.jpg', 'image/jpeg')
 
     await wrapper.find('#ride-name').setValue('Morning Ride')
     await wrapper.find('#ride-description').setValue('Easy spin')
     await wrapper.find('#ride-location').setValue('1')
     await setFile(wrapper, '#ride-fit-file', fitFile)
-    await setFile(wrapper, '#ride-image', imageFile)
     await wrapper.find('form.ride-form').trigger('submit')
     await flushPromises()
 
@@ -200,7 +198,6 @@ describe('AddRideView', () => {
       description: 'Easy spin',
       locationId: 1,
       fitFile,
-      imageFile,
     })
     expect(toastStore.toasts[0]?.message).toBe('Ride added to BikeMap')
     expect(router.currentRoute.value.name).toBe('rides')
