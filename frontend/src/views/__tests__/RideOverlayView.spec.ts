@@ -71,7 +71,6 @@ function ridesResponse(overrides = {}) {
           system_key: null,
           map_provider: 'openstreetmap' as const,
         },
-        thumbnail_url: null,
       },
     ],
     meta: {
@@ -97,7 +96,6 @@ function rideDetails(overrides = {}) {
     moving_time: '3600.00',
     average_speed: '12.10',
     max_speed: '24.20',
-    image_url: null,
     route_data: [
       {
         latitude: 40.1,
@@ -260,7 +258,6 @@ describe('RideOverlayView', () => {
             system_key: null,
             map_provider: 'openstreetmap' as const,
           },
-          thumbnail_url: null,
         },
       ],
       meta: {

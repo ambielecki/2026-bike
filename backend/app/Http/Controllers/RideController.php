@@ -6,7 +6,6 @@ use App\Http\Requests\IndexRideRequest;
 use App\Http\Requests\StoreRideRequest;
 use App\Http\Requests\UpdateRideRequest;
 use App\Models\Ride;
-use App\Models\RideImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
@@ -25,7 +24,6 @@ class RideController extends Controller
         $query = Ride::query()
             ->with([
                 'location:id,name,system_key,map_provider',
-                'images' => fn ($query) => $query->oldest('id'),
             ])
             ->whereBelongsTo($request->user())
             ->when($validated['location_id'] ?? null, fn ($query, $locationId) => $query->where('location_id', $locationId))
@@ -57,7 +55,6 @@ class RideController extends Controller
                     'system_key' => $ride->location->system_key,
                     'map_provider' => $ride->location->map_provider,
                 ] : null,
-                'thumbnail_url' => $this->thumbnailUrl($ride),
             ])->values(),
             'meta' => [
                 'current_page' => $paginator->currentPage(),
@@ -93,30 +90,7 @@ class RideController extends Controller
                 'fitPath' => $fitPath,
             ]);
 
-            if ($request->hasFile('image')) {
-                $extension = $request->file('image')->extension();
-                $imageName = Str::uuid()->toString().'.'.$extension;
-
-                $request->file('image')->storeAs(
-                    "rides/{$ride->id}/images/original",
-                    $imageName,
-                    'public',
-                );
-
-                $image = RideImage::query()->create([
-                    'ride_id' => $ride->id,
-                    'user_id' => $user->id,
-                    'name' => $imageName,
-                    'description' => null,
-                    'has_sizes' => false,
-                ]);
-
-                Artisan::call('ride:create-image-sizes', [
-                    'image' => $image->id,
-                ]);
-            }
-
-            return $ride->load('location', 'images');
+            return $ride->load('location');
         });
 
         return response()->json([
@@ -128,10 +102,7 @@ class RideController extends Controller
     {
         abort_unless($ride->user_id === request()->user()?->id, 404);
 
-        $ride->load([
-            'location:id,name,latitude,longitude,system_key,map_provider',
-            'images' => fn ($query) => $query->oldest('id'),
-        ]);
+        $ride->load('location:id,name,latitude,longitude,system_key,map_provider');
 
         return response()->json([
             'data' => $this->detailsData($ride),
@@ -149,10 +120,7 @@ class RideController extends Controller
             'description' => $validated['description'] ?? null,
         ]);
 
-        $ride->load([
-            'location:id,name,latitude,longitude,system_key,map_provider',
-            'images' => fn ($query) => $query->oldest('id'),
-        ]);
+        $ride->load('location:id,name,latitude,longitude,system_key,map_provider');
 
         return response()->json([
             'data' => $this->detailsData($ride),
@@ -195,25 +163,6 @@ class RideController extends Controller
                 'system_key' => $ride->location->system_key,
                 'map_provider' => $ride->location->map_provider,
             ] : null,
-            'image_url' => $this->imageUrl($ride, 'medium'),
         ];
-    }
-
-    private function thumbnailUrl(Ride $ride): ?string
-    {
-        return $this->imageUrl($ride, 'small');
-    }
-
-    private function imageUrl(Ride $ride, string $preferredSize): ?string
-    {
-        $image = $ride->images->first();
-
-        if (! $image instanceof RideImage) {
-            return null;
-        }
-
-        $size = $image->has_sizes ? $preferredSize : 'original';
-
-        return Storage::disk('public')->url("rides/{$ride->id}/images/{$size}/{$image->name}");
     }
 }

@@ -78,7 +78,6 @@ function ridesResponse(overrides = {}) {
           system_key: null,
           map_provider: 'openstreetmap' as const,
         },
-        thumbnail_url: 'http://example.test/storage/rides/10/images/small/photo.jpg',
       },
     ],
     meta: {
@@ -124,7 +123,7 @@ describe('RideListView', () => {
     expect(wrapper.text()).toContain('12.34 mi')
     expect(wrapper.text()).toContain('1h 2m')
     expect(wrapper.text()).toContain('North Park')
-    expect(wrapper.find('img').attributes('src')).toBe('http://example.test/storage/rides/10/images/small/photo.jpg')
+    expect(wrapper.find('img').exists()).toBe(false)
     expect(wrapper.find('a.ride-title').attributes('href')).toBe('/rides/10')
   })
 

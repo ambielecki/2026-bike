@@ -9,7 +9,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -64,15 +63,8 @@ class RideEndpointsTest extends TestCase
                 ['latitude' => 40.2, 'longitude' => -79.2],
             ],
         ]);
-        RideImage::factory()->create([
-            'ride_id' => $ride->id,
-            'user_id' => $user->id,
-            'name' => 'first.jpg',
-            'has_sizes' => true,
-        ]);
 
         $response = $this->actingAs($user)->getJson("/api/rides/{$ride->id}");
-        $storageUrl = Config::get('filesystems.disks.public.url');
 
         $response->assertOk()
             ->assertJsonPath('data.id', $ride->id)
@@ -86,30 +78,10 @@ class RideEndpointsTest extends TestCase
             ->assertJsonPath('data.location.name', 'North Park')
             ->assertJsonPath('data.route_data.0.latitude', 40.1)
             ->assertJsonPath('data.route_data.1.longitude', -79.2)
-            ->assertJsonPath('data.image_url', "{$storageUrl}/rides/{$ride->id}/images/medium/first.jpg");
+            ->assertJsonMissingPath('data.image_url');
     }
 
-    public function test_ride_details_image_url_uses_original_when_sizes_are_missing(): void
-    {
-        $user = User::factory()->create();
-        $ride = Ride::factory()->create([
-            'user_id' => $user->id,
-        ]);
-        RideImage::factory()->create([
-            'ride_id' => $ride->id,
-            'user_id' => $user->id,
-            'name' => 'original.jpg',
-            'has_sizes' => false,
-        ]);
-
-        $response = $this->actingAs($user)->getJson("/api/rides/{$ride->id}");
-        $storageUrl = Config::get('filesystems.disks.public.url');
-
-        $response->assertOk()
-            ->assertJsonPath('data.image_url', "{$storageUrl}/rides/{$ride->id}/images/original/original.jpg");
-    }
-
-    public function test_ride_details_image_url_is_null_without_images(): void
+    public function test_ride_details_do_not_include_image_url(): void
     {
         $user = User::factory()->create();
         $ride = Ride::factory()->create([
@@ -119,7 +91,7 @@ class RideEndpointsTest extends TestCase
         $response = $this->actingAs($user)->getJson("/api/rides/{$ride->id}");
 
         $response->assertOk()
-            ->assertJsonPath('data.image_url', null);
+            ->assertJsonMissingPath('data.image_url');
     }
 
     public function test_user_cannot_view_another_users_ride_details(): void
@@ -245,7 +217,6 @@ class RideEndpointsTest extends TestCase
         ]);
         RideImage::factory()->create([
             'ride_id' => $ride->id,
-            'user_id' => $user->id,
             'name' => 'photo.jpg',
         ]);
 
@@ -439,55 +410,30 @@ class RideEndpointsTest extends TestCase
             ->assertJsonValidationErrors(['end_date']);
     }
 
-    public function test_ride_list_uses_small_thumbnail_when_sizes_exist_and_original_fallback(): void
+    public function test_ride_list_does_not_include_thumbnail_urls(): void
     {
         $user = User::factory()->create();
         $location = Location::factory()->create([
             'user_id' => $user->id,
         ]);
-        $rideWithSizes = Ride::factory()->create([
+        Ride::factory()->create([
             'user_id' => $user->id,
             'location_id' => $location->id,
             'datetime' => now(),
         ]);
-        RideImage::factory()->create([
-            'ride_id' => $rideWithSizes->id,
-            'user_id' => $user->id,
-            'name' => 'with-sizes.jpg',
-            'has_sizes' => true,
-        ]);
-        $rideWithoutSizes = Ride::factory()->create([
-            'user_id' => $user->id,
-            'location_id' => $location->id,
-            'datetime' => now()->subDay(),
-        ]);
-        RideImage::factory()->create([
-            'ride_id' => $rideWithoutSizes->id,
-            'user_id' => $user->id,
-            'name' => 'original.jpg',
-            'has_sizes' => false,
-        ]);
 
         $response = $this->actingAs($user)->getJson('/api/rides?per_page=10');
 
-        $storageUrl = Config::get('filesystems.disks.public.url');
-
         $response->assertOk()
-            ->assertJsonPath('data.0.thumbnail_url', "{$storageUrl}/rides/{$rideWithSizes->id}/images/small/with-sizes.jpg")
-            ->assertJsonPath('data.1.thumbnail_url', "{$storageUrl}/rides/{$rideWithoutSizes->id}/images/original/original.jpg");
+            ->assertJsonMissingPath('data.0.thumbnail_url');
     }
 
-    public function test_user_can_create_ride_with_fit_file_and_image(): void
+    public function test_user_can_create_ride_with_fit_file(): void
     {
         Storage::fake('local');
-        Storage::fake('public');
         Artisan::shouldReceive('call')
             ->once()
             ->with('ride:process-fit', \Mockery::on(fn (array $arguments): bool => isset($arguments['ride'], $arguments['fitPath'])))
-            ->andReturn(0);
-        Artisan::shouldReceive('call')
-            ->once()
-            ->with('ride:create-image-sizes', \Mockery::on(fn (array $arguments): bool => isset($arguments['image'])))
             ->andReturn(0);
 
         $user = User::factory()->create();
@@ -500,14 +446,13 @@ class RideEndpointsTest extends TestCase
             'description' => 'Easy spin',
             'location_id' => $location->id,
             'fit_file' => UploadedFile::fake()->create('morning.fit', 10, 'application/octet-stream'),
-            'image' => UploadedFile::fake()->image('photo.jpg'),
         ]);
 
         $response->assertCreated()
             ->assertJsonPath('data.name', 'Morning Ride')
             ->assertJsonPath('data.user_id', $user->id)
             ->assertJsonPath('data.location_id', $location->id)
-            ->assertJsonCount(1, 'data.images');
+            ->assertJsonMissingPath('data.images');
 
         $this->assertDatabaseHas('rides', [
             'name' => 'Morning Ride',
@@ -515,13 +460,34 @@ class RideEndpointsTest extends TestCase
             'user_id' => $user->id,
             'location_id' => $location->id,
         ]);
-        $this->assertDatabaseCount('images', 1);
+        $this->assertDatabaseCount('images', 0);
 
         $fitFiles = Storage::disk('local')->allFiles('ride-fit');
-        $imageFiles = Storage::disk('public')->allFiles("rides/{$response->json('data.id')}/images/original");
 
         $this->assertCount(1, $fitFiles);
-        $this->assertCount(1, $imageFiles);
+    }
+
+    public function test_user_cannot_create_ride_with_image(): void
+    {
+        Artisan::shouldReceive('call')->never();
+
+        $user = User::factory()->create();
+        $location = Location::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/api/rides', [
+            'name' => 'Morning Ride',
+            'location_id' => $location->id,
+            'fit_file' => UploadedFile::fake()->create('morning.fit', 10, 'application/octet-stream'),
+            'image' => UploadedFile::fake()->image('photo.jpg'),
+        ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['image']);
+
+        $this->assertDatabaseCount('rides', 0);
+        $this->assertDatabaseCount('images', 0);
     }
 
     public function test_user_can_create_ride_for_watopia_location(): void

@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\Ride;
 use App\Models\RideImage;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -23,7 +22,6 @@ class RideImageFactory extends Factory
     {
         return [
             'ride_id' => Ride::factory(),
-            'user_id' => User::factory(),
             'name' => fake()->uuid().'.jpg',
             'description' => null,
             'has_sizes' => false,

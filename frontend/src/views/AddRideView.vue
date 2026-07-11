@@ -23,7 +23,6 @@ const name = ref('')
 const description = ref('')
 const locationId = ref('')
 const fitFile = ref<File | null>(null)
-const imageFile = ref<File | null>(null)
 const nameError = ref('')
 const locationError = ref('')
 const fitFileError = ref('')
@@ -80,7 +79,6 @@ async function submitRide() {
       description: description.value.trim(),
       locationId: Number(locationId.value),
       fitFile: fitFile.value,
-      imageFile: imageFile.value,
     })
     toastStore.success('Ride added to BikeMap')
     await router.push({ name: 'rides' })
@@ -251,13 +249,6 @@ function resetLocationModal() {
           :error="fitFileError"
           label="FIT file"
           @change="fitFile = $event"
-        />
-
-        <AppFileField
-          id="ride-image"
-          accept="image/*"
-          label="Image"
-          @change="imageFile = $event"
         />
 
         <button class="primary-action" :disabled="isSubmitting" type="submit">

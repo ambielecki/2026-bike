@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['ride_id', 'user_id', 'name', 'description', 'has_sizes'])]
+#[Fillable(['ride_id', 'name', 'description', 'has_sizes'])]
 class RideImage extends Model
 {
     /** @use HasFactory<RideImageFactory> */
@@ -22,14 +22,6 @@ class RideImage extends Model
     public function ride(): BelongsTo
     {
         return $this->belongsTo(Ride::class);
-    }
-
-    /**
-     * @return BelongsTo<User, $this>
-     */
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
     }
 
     /**

@@ -46,9 +46,7 @@ class StoreRideRequest extends FormRequest
                 'max:25600',
             ],
             'image' => [
-                'nullable',
-                'image',
-                'max:10240',
+                'prohibited',
             ],
         ];
     }

@@ -47,12 +47,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(Ride::class);
     }
-
-    /**
-     * @return HasMany<RideImage, $this>
-     */
-    public function rideImages(): HasMany
-    {
-        return $this->hasMany(RideImage::class);
-    }
 }

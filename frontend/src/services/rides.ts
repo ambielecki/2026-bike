@@ -32,7 +32,6 @@ export interface RideListItem {
     system_key: string | null
     map_provider: MapProvider
   } | null
-  thumbnail_url: string | null
 }
 
 export interface RoutePoint {
@@ -51,7 +50,6 @@ export interface RideDetails {
   average_speed: string | null
   max_speed: string | null
   route_data: RoutePoint[]
-  image_url: string | null
   location: {
     id: number
     name: string
@@ -110,7 +108,6 @@ export interface CreateRidePayload {
   description: string
   locationId: number
   fitFile: File
-  imageFile: File | null
 }
 
 export interface UpdateRidePayload {
@@ -206,10 +203,6 @@ export async function createRide(payload: CreateRidePayload) {
 
   if (payload.description) {
     formData.append('description', payload.description)
-  }
-
-  if (payload.imageFile) {
-    formData.append('image', payload.imageFile)
   }
 
   const response = await api.post<ApiData<Ride>>('/api/rides', formData)

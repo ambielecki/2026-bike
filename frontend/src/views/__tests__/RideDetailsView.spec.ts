@@ -78,7 +78,6 @@ function rideDetails(overrides = {}) {
     moving_time: '3600.00',
     average_speed: '11.10',
     max_speed: '22.20',
-    image_url: 'http://example.test/storage/rides/10/images/medium/photo.jpg',
     route_data: [
       {
         latitude: 40.1,
@@ -127,10 +126,6 @@ describe('RideDetailsView', () => {
     expect(wrapper.text()).toContain('11.10 mph')
     expect(wrapper.text()).toContain('22.20 mph')
     expect(wrapper.find('.route-map-stub').text()).toContain('1 route overlays')
-    expect(wrapper.find('.ride-image').attributes('src')).toBe(
-      'http://example.test/storage/rides/10/images/medium/photo.jpg',
-    )
-    expect(wrapper.find('.ride-image').attributes('alt')).toBe('Morning Ride ride image')
 
     const map = wrapper.findComponent(routeMapStub)
     expect(map.props('center')).toEqual({
@@ -191,18 +186,6 @@ describe('RideDetailsView', () => {
         visible: true,
       },
     ])
-  })
-
-  it('does not render a ride image when no image URL is present', async () => {
-    mockedGetRide.mockResolvedValueOnce(
-      rideDetails({
-        image_url: null,
-      }),
-    )
-
-    const { wrapper } = await mountRideDetailsView()
-
-    expect(wrapper.find('.ride-image').exists()).toBe(false)
   })
 
   it('updates route color opacity and visibility controls', async () => {
