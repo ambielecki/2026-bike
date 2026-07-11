@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Location;
 use App\Models\Ride;
-use App\Models\RideImage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -215,21 +214,13 @@ class RideEndpointsTest extends TestCase
         $ride = Ride::factory()->create([
             'user_id' => $user->id,
         ]);
-        RideImage::factory()->create([
-            'ride_id' => $ride->id,
-            'name' => 'photo.jpg',
-        ]);
-
         Storage::put("ride-fit/{$ride->id}/ride.fit", 'fit contents');
-        Storage::disk('public')->put("rides/{$ride->id}/images/original/photo.jpg", 'image contents');
 
         $response = $this->actingAs($user)->deleteJson("/api/rides/{$ride->id}");
 
         $response->assertNoContent();
         $this->assertDatabaseMissing('rides', ['id' => $ride->id]);
-        $this->assertDatabaseMissing('images', ['ride_id' => $ride->id]);
         Storage::assertMissing("ride-fit/{$ride->id}/ride.fit");
-        Storage::disk('public')->assertMissing("rides/{$ride->id}/images/original/photo.jpg");
     }
 
     public function test_user_cannot_delete_another_users_ride(): void

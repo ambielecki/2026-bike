@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\RideImage;
+use App\Models\Image;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 
@@ -19,7 +19,7 @@ class CreateRideImageSizesCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'ride:create-image-sizes {image}';
+    protected $signature = 'image:create-sizes {image}';
 
     /**
      * The console command description.
@@ -30,7 +30,7 @@ class CreateRideImageSizesCommand extends Command
 
     public function handle(): int
     {
-        $image = RideImage::query()->findOrFail($this->argument('image'));
+        $image = Image::query()->findOrFail($this->argument('image'));
         $originalPath = $this->path($image, 'original');
         $source = Storage::disk('public')->path($originalPath);
 
@@ -47,9 +47,9 @@ class CreateRideImageSizesCommand extends Command
         return self::SUCCESS;
     }
 
-    private function path(RideImage $image, string $size): string
+    private function path(Image $image, string $size): string
     {
-        return "rides/{$image->ride_id}/images/{$size}/{$image->name}";
+        return $image->path($size);
     }
 
     private function writeSize(string $source, string $targetPath, int $maxWidth): void

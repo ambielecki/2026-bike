@@ -27,5 +27,7 @@ class DatabaseSeeder extends Seeder
             ['system_key' => Location::SYSTEM_KEY_WATOPIA],
             Location::watopiaAttributes(),
         );
+
+        $this->call(HomepageContentSeeder::class);
     }
 }

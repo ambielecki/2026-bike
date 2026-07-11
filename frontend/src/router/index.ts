@@ -1,9 +1,12 @@
+import { pinia } from '@/plugins/pinia'
+import { useAuthStore } from '@/stores/auth'
 import { createRouter, createWebHistory } from 'vue-router'
+import AdminDashboardView from '@/views/AdminDashboardView.vue'
+import AdminHomepageView from '@/views/AdminHomepageView.vue'
 import AddRideView from '@/views/AddRideView.vue'
 import HomeView from '@/views/HomeView.vue'
 import LocationSettingsView from '@/views/LocationSettingsView.vue'
 import LoginView from '@/views/LoginView.vue'
-import PlaceholderView from '@/views/PlaceholderView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import RideDetailsView from '@/views/RideDetailsView.vue'
 import RideListView from '@/views/RideListView.vue'
@@ -41,9 +44,19 @@ const router = createRouter({
     {
       path: '/admin',
       name: 'admin-tools',
-      component: PlaceholderView,
-      props: {
-        title: 'Admin Tools',
+      component: AdminDashboardView,
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/home',
+      name: 'admin-homepage',
+      component: AdminHomepageView,
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
       },
     },
     {
@@ -67,6 +80,28 @@ const router = createRouter({
       component: LoginView,
     },
   ],
+})
+
+router.beforeEach(async (to) => {
+  const authStore = useAuthStore(pinia)
+
+  if ((to.meta.requiresAuth || to.meta.requiresAdmin) && !authStore.currentUser) {
+    await authStore.loadCurrentUser()
+  }
+
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    return {
+      name: 'login',
+    }
+  }
+
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    return {
+      name: 'home',
+    }
+  }
+
+  return true
 })
 
 export default router

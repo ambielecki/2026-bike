@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Controllers\AdminImageController;
+use App\Http\Controllers\HomepageController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\RideController;
 use App\Http\Controllers\TestHelperController;
 use App\Http\Controllers\UserSettingsController;
+use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +16,8 @@ Route::get('/health', function () {
         'status' => 'ok',
     ]);
 });
+
+Route::get('/homepage', [HomepageController::class, 'show']);
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -29,6 +34,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/rides/{ride}', [RideController::class, 'show']);
     Route::patch('/rides/{ride}', [RideController::class, 'update']);
     Route::delete('/rides/{ride}', [RideController::class, 'destroy']);
+
+    Route::middleware(EnsureUserIsAdmin::class)->prefix('admin')->group(function () {
+        Route::get('/homepage', [HomepageController::class, 'adminShow']);
+        Route::patch('/homepage', [HomepageController::class, 'update']);
+        Route::post('/images', [AdminImageController::class, 'store']);
+    });
 });
 
 if (strcasecmp((string) Config::get('app.env'), 'production') !== 0) {

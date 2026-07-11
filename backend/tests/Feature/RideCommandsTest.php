@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Image;
 use App\Models\Ride;
-use App\Models\RideImage;
 use App\Services\FitRideDataExtractor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -69,23 +69,23 @@ class RideCommandsTest extends TestCase
     {
         Storage::fake('public');
 
-        $image = RideImage::factory()->create([
+        $image = Image::factory()->create([
             'name' => 'ride.jpg',
             'has_sizes' => false,
         ]);
 
         Storage::disk('public')->put(
-            "rides/{$image->ride_id}/images/original/ride.jpg",
+            'homepage/images/original/ride.jpg',
             $this->jpegBytes(),
         );
 
-        $this->artisan('ride:create-image-sizes', [
+        $this->artisan('image:create-sizes', [
             'image' => $image->id,
         ])->assertSuccessful();
 
-        Storage::disk('public')->assertExists("rides/{$image->ride_id}/images/small/ride.jpg");
-        Storage::disk('public')->assertExists("rides/{$image->ride_id}/images/medium/ride.jpg");
-        Storage::disk('public')->assertExists("rides/{$image->ride_id}/images/large/ride.jpg");
+        Storage::disk('public')->assertExists('homepage/images/small/ride.jpg');
+        Storage::disk('public')->assertExists('homepage/images/medium/ride.jpg');
+        Storage::disk('public')->assertExists('homepage/images/large/ride.jpg');
         $this->assertTrue($image->refresh()->has_sizes);
     }
 

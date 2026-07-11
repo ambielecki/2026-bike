@@ -1,50 +1,48 @@
 <script setup lang="ts">
-import { api } from '@/services/api'
-import { useToastStore } from '@/stores/toasts'
+import { computed, onMounted, ref } from 'vue'
 
-const toastStore = useToastStore()
+import {
+  defaultHomepageContent,
+  getHomepage,
+  type HomepageContent,
+} from '@/services/homepage'
 
-async function runHealthcheck() {
+const content = ref<HomepageContent>(defaultHomepageContent)
+const activeImageIndex = ref(0)
+
+const activeImage = computed(() => content.value.carousel_images[activeImageIndex.value] ?? null)
+
+onMounted(() => {
+  void loadHomepage()
+})
+
+async function loadHomepage() {
   try {
-    await api.get<{ status: string }>('/api/health')
-    toastStore.success('The backend API responded successfully.', 'API healthy')
+    content.value = await getHomepage()
+    activeImageIndex.value = 0
   } catch {
-    return
+    content.value = defaultHomepageContent
   }
 }
 
-async function triggerNotFound() {
-  try {
-    await api.get('/api/test-errors/not-found')
-  } catch {
+function previousImage() {
+  const imageCount = content.value.carousel_images.length
+
+  if (imageCount === 0) {
     return
   }
+
+  activeImageIndex.value = (activeImageIndex.value - 1 + imageCount) % imageCount
 }
 
-async function triggerValidationError() {
-  try {
-    await api.get('/api/test-errors/validation')
-  } catch {
+function nextImage() {
+  const imageCount = content.value.carousel_images.length
+
+  if (imageCount === 0) {
     return
   }
-}
 
-async function triggerSessionPost() {
-  try {
-    const response = await api.post<{ status: string; count: number }>('/api/test-session', {})
-
-    toastStore.success(`POST test succeeded. Session count is now ${response.count}.`, 'POST succeeded')
-  } catch {
-    return
-  }
-}
-
-async function triggerServerError() {
-  try {
-    await api.get('/api/test-errors/server-error')
-  } catch {
-    return
-  }
+  activeImageIndex.value = (activeImageIndex.value + 1) % imageCount
 }
 </script>
 
@@ -53,69 +51,36 @@ async function triggerServerError() {
     <v-container class="fill-height">
       <v-row align="center" class="hero-row" justify="space-between">
         <v-col cols="12" md="6">
-          <div class="eyebrow">BikeMap</div>
-          <h1 class="headline">Track every mountain bike route worth riding twice.</h1>
-          <p class="intro">
-            Keep a clean record of the trails you ride, remember the lines you liked, and build a
-            personal map of every loop, climb, and descent.
-          </p>
-          <div class="actions">
-            <v-btn color="primary" href="#highlights" rounded="pill" size="x-large">
-              See what BikeMap tracks
-            </v-btn>
-            <v-btn href="#welcome-card" rounded="pill" size="x-large" variant="text">
-              Why riders use it
-            </v-btn>
-          </div>
-          <div class="toast-demo">
-            <v-btn color="success" rounded="pill" variant="flat" @click="runHealthcheck">
-              Check API
-            </v-btn>
-            <v-btn color="warning" rounded="pill" variant="flat" @click="triggerNotFound">
-              Test 404
-            </v-btn>
-            <v-btn color="warning" rounded="pill" variant="flat" @click="triggerValidationError">
-              Test validation
-            </v-btn>
-            <v-btn color="success" rounded="pill" variant="flat" @click="triggerSessionPost">
-              Test POST
-            </v-btn>
-            <v-btn color="error" rounded="pill" variant="flat" @click="triggerServerError">
-              Test server error
-            </v-btn>
-          </div>
+          <div class="eyebrow">{{ content.site_name }}</div>
+          <h1 class="headline">{{ content.headline }}</h1>
+          <p class="intro">{{ content.intro }}</p>
         </v-col>
 
         <v-col cols="12" md="5">
-          <v-card id="welcome-card" class="trail-card" elevation="10" rounded="xl">
-            <div class="card-label">Ride Log</div>
-            <div class="card-title">Your trail history, organized for the next ride.</div>
-            <div class="card-copy">
-              BikeMap is built for riders who want more than a pile of GPX files. Save routes,
-              remember trail conditions, and return to the runs that earned another lap.
-            </div>
-
-            <v-divider class="my-6" />
-
-            <div class="metric-list">
-              <v-sheet class="metric" color="surface" rounded="lg">
-                <div class="metric-value">Routes</div>
-                <div class="metric-text">Store each ride as a route you can find again fast.</div>
-              </v-sheet>
-              <v-sheet class="metric" color="surface" rounded="lg">
-                <div class="metric-value">Notes</div>
-                <div class="metric-text">
-                  Keep track of terrain, weather, and the sections worth repeating.
+          <section class="carousel-panel" aria-label="Homepage images">
+            <template v-if="activeImage">
+              <img
+                class="carousel-image"
+                :src="activeImage.urls.large"
+                :alt="activeImage.alt_text"
+              />
+              <div class="carousel-footer">
+                <p v-if="activeImage.description">{{ activeImage.description }}</p>
+                <div class="carousel-controls">
+                  <button type="button" aria-label="Previous image" @click="previousImage">
+                    Previous
+                  </button>
+                  <span>{{ activeImageIndex + 1 }} / {{ content.carousel_images.length }}</span>
+                  <button type="button" aria-label="Next image" @click="nextImage">Next</button>
                 </div>
-              </v-sheet>
-              <v-sheet class="metric" color="surface" rounded="lg">
-                <div class="metric-value">Recall</div>
-                <div class="metric-text">
-                  Build a riding memory that stays useful all season.
-                </div>
-              </v-sheet>
+              </div>
+            </template>
+
+            <div v-else class="carousel-empty">
+              <div class="empty-mark" aria-hidden="true"></div>
+              <p>{{ content.site_name }}</p>
             </div>
-          </v-card>
+          </section>
         </v-col>
       </v-row>
     </v-container>
@@ -124,31 +89,15 @@ async function triggerServerError() {
   <section id="highlights" class="highlights">
     <v-container>
       <v-row>
-        <v-col cols="12" md="4">
+        <v-col
+          v-for="highlight in content.highlights"
+          :key="`${highlight.sort_order}-${highlight.title}`"
+          cols="12"
+          md="4"
+        >
           <v-card class="feature-card" height="100%" rounded="xl" variant="tonal">
-            <div class="feature-title">Save routes that matter</div>
-            <p class="feature-copy">
-              Keep your favorite climbs, descents, and loops in one place instead of digging through
-              old ride files.
-            </p>
-          </v-card>
-        </v-col>
-        <v-col cols="12" md="4">
-          <v-card class="feature-card" height="100%" rounded="xl" variant="tonal">
-            <div class="feature-title">Add context to each ride</div>
-            <p class="feature-copy">
-              Capture conditions, difficulty, and trail notes so the next outing starts with better
-              information.
-            </p>
-          </v-card>
-        </v-col>
-        <v-col cols="12" md="4">
-          <v-card class="feature-card" height="100%" rounded="xl" variant="tonal">
-            <div class="feature-title">Build your own trail map</div>
-            <p class="feature-copy">
-              Turn repeated rides into a personal map of where you have been and where you want to
-              ride next.
-            </p>
+            <div class="feature-title">{{ highlight.title }}</div>
+            <p class="feature-copy">{{ highlight.copy }}</p>
           </v-card>
         </v-col>
       </v-row>
@@ -158,14 +107,14 @@ async function triggerServerError() {
 
 <style scoped>
 .hero {
-  min-height: 100vh;
   background:
-    radial-gradient(circle at top, rgba(163, 214, 181, 0.28), transparent 38%),
+    radial-gradient(circle at top left, rgba(163, 214, 181, 0.26), transparent 34%),
     linear-gradient(160deg, #f5f1e8 0%, #dce7d4 48%, #f8f6f0 100%);
+  min-height: calc(100vh - 4rem);
 }
 
 .hero-row {
-  min-height: 100vh;
+  min-height: calc(100vh - 4rem);
   padding: 3rem 0;
 }
 
@@ -194,102 +143,105 @@ async function triggerServerError() {
   max-width: 34rem;
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.toast-demo {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
-}
-
-.trail-card {
-  background: rgba(253, 251, 246, 0.88);
-  backdrop-filter: blur(0.75rem);
-  padding: 1.75rem;
-}
-
-.card-label {
-  color: #355e3b;
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  margin-bottom: 0.75rem;
-  text-transform: uppercase;
-}
-
-.card-title {
-  color: #142013;
-  font-size: 1.75rem;
-  font-weight: 700;
-  line-height: 1.2;
-  margin-bottom: 0.75rem;
-}
-
-.card-copy {
-  color: rgba(20, 32, 19, 0.76);
-  font-size: 1rem;
-  line-height: 1.7;
-}
-
-.metric-list {
+.carousel-panel {
+  background: #fffdf7;
+  border: 0.0625rem solid rgba(53, 94, 59, 0.14);
+  border-radius: 0.5rem;
+  box-shadow: 0 1rem 2rem rgba(20, 32, 19, 0.12);
   display: grid;
-  gap: 0.875rem;
+  min-height: 28rem;
+  overflow: hidden;
 }
 
-.metric {
-  border: 0.0625rem solid rgba(53, 94, 59, 0.12);
+.carousel-image {
+  aspect-ratio: 4 / 3;
+  display: block;
+  height: auto;
+  object-fit: cover;
+  width: 100%;
+}
+
+.carousel-footer,
+.carousel-empty {
+  display: grid;
+  gap: 1rem;
   padding: 1rem;
 }
 
-.metric-value {
-  color: #1f3523;
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 0.375rem;
+.carousel-footer p,
+.carousel-empty p {
+  color: #52614f;
+  line-height: 1.5;
+  margin: 0;
 }
 
-.metric-text {
-  color: rgba(20, 32, 19, 0.72);
-  line-height: 1.5;
+.carousel-controls {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.carousel-controls button {
+  background: #355e3b;
+  border: 0;
+  border-radius: 0.375rem;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  min-height: 2.5rem;
+  padding: 0 0.875rem;
+}
+
+.carousel-controls span {
+  color: #142013;
+  font-weight: 700;
+}
+
+.carousel-empty {
+  align-content: center;
+  justify-items: center;
+  min-height: 28rem;
+  text-align: center;
+}
+
+.empty-mark {
+  background:
+    linear-gradient(135deg, rgba(53, 94, 59, 0.34), rgba(214, 121, 69, 0.32)),
+    linear-gradient(160deg, #eef4e6, #f8f6f0);
+  border-radius: 0.5rem;
+  height: 14rem;
+  width: min(100%, 22rem);
 }
 
 .highlights {
   background: #f8f6f0;
-  padding: 2rem 0 4rem;
+  padding: 4rem 0;
 }
 
 .feature-card {
-  background: #eef3e8;
+  background: rgba(255, 253, 247, 0.86);
+  border: 0.0625rem solid rgba(53, 94, 59, 0.1);
   padding: 1.5rem;
 }
 
 .feature-title {
-  color: #1f3523;
-  font-size: 1.2rem;
+  color: #142013;
+  font-size: 1.25rem;
   font-weight: 700;
+  line-height: 1.25;
   margin-bottom: 0.75rem;
 }
 
 .feature-copy {
-  color: rgba(20, 32, 19, 0.75);
-  line-height: 1.65;
+  color: rgba(20, 32, 19, 0.74);
+  line-height: 1.6;
   margin: 0;
 }
 
-@media (max-width: 59.9375rem) {
-  .hero-row {
-    min-height: auto;
-    padding: 2rem 0 3rem;
-  }
-
-  .headline {
-    max-width: 100%;
-  }
+button:focus-visible {
+  outline: 0.1875rem solid rgba(53, 94, 59, 0.28);
+  outline-offset: 0.125rem;
 }
 </style>

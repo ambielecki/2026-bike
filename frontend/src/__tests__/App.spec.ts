@@ -90,6 +90,6 @@ describe('App', () => {
     expect(wrapper.text()).toContain('BikeMap')
     expect(wrapper.text()).toContain('Register')
     expect(wrapper.text()).toContain('Log In')
-    expect(wrapper.text()).toContain('Check API')
+    expect(wrapper.text()).toContain('Save routes that matter')
   })
 })

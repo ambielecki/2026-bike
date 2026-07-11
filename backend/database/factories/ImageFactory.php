@@ -2,15 +2,15 @@
 
 namespace Database\Factories;
 
-use App\Models\RideImage;
+use App\Models\Image;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<RideImage>
+ * @extends Factory<Image>
  */
-class RideImageFactory extends Factory
+class ImageFactory extends Factory
 {
-    protected $model = RideImage::class;
+    protected $model = Image::class;
 
     /**
      * Define the model's default state.

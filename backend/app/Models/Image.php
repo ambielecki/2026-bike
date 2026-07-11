@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 #[Fillable(['name', 'description', 'alt_text', 'has_sizes'])]
-class RideImage extends Model
+class Image extends Model
 {
     /** @use HasFactory<ImageFactory> */
     use HasFactory;
