@@ -342,7 +342,7 @@ class RideEndpointsTest extends TestCase
     public function test_user_can_filter_rides_by_watopia_location(): void
     {
         $user = User::factory()->create();
-        $watopia = Location::factory()->watopia()->create();
+        $watopia = Location::query()->where('system_key', Location::SYSTEM_KEY_WATOPIA)->firstOrFail();
         $ownedLocation = Location::factory()->create([
             'user_id' => $user->id,
         ]);
@@ -533,7 +533,7 @@ class RideEndpointsTest extends TestCase
             ->andReturn(0);
 
         $user = User::factory()->create();
-        $watopia = Location::factory()->watopia()->create();
+        $watopia = Location::query()->where('system_key', Location::SYSTEM_KEY_WATOPIA)->firstOrFail();
 
         $response = $this->actingAs($user)->postJson('/api/rides', [
             'name' => 'Watopia Spin',

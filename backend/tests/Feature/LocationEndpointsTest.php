@@ -23,7 +23,7 @@ class LocationEndpointsTest extends TestCase
             'name' => 'Hidden Trail',
             'user_id' => $otherUser->id,
         ]);
-        $watopia = Location::factory()->watopia()->create();
+        $watopia = Location::query()->where('system_key', Location::SYSTEM_KEY_WATOPIA)->firstOrFail();
 
         $response = $this->actingAs($user)->getJson('/api/locations');
 
@@ -53,8 +53,6 @@ class LocationEndpointsTest extends TestCase
         Location::factory()->create([
             'name' => 'Other Trail',
         ]);
-        Location::factory()->watopia()->create();
-
         $response = $this->actingAs($user)->getJson('/api/locations?page=2&per_page=1');
 
         $response->assertOk()
