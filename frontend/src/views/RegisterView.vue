@@ -43,7 +43,7 @@ async function submitRegistration() {
       password.value,
       passwordConfirmation.value,
     )
-    toastStore.success('Welcome to BikeMap')
+    toastStore.success('Welcome to ShowMyRides')
     await router.push({ name: 'home' })
   } catch (error) {
     formError.value = error instanceof ApiError ? error.message : 'Unable to register.'
@@ -108,7 +108,7 @@ function validateConfirmation() {
 <template>
   <AuthFormPanel
     :error="formError"
-    subtitle="Create your BikeMap account."
+    subtitle="Create your ShowMyRides account."
     title="Register"
   >
     <form class="register-form" novalidate @submit.prevent="submitRegistration">

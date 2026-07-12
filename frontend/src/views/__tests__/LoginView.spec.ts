@@ -100,7 +100,7 @@ describe('LoginView', () => {
     await flushPromises()
 
     expect(loginSpy).toHaveBeenCalledWith('rider@example.com', 'password', false)
-    expect(toastStore.toasts[0]?.message).toBe('Welcome Back to BikeMap')
+    expect(toastStore.toasts[0]?.message).toBe('Welcome Back to ShowMyRides')
     expect(router.currentRoute.value.name).toBe('rides')
   })
 

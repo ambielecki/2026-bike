@@ -25,7 +25,7 @@ const step = ref<'email' | 'password'>('email')
 const panelTitle = computed(() => (step.value === 'email' ? 'Log In' : 'Enter Password'))
 const panelSubtitle = computed(() =>
   step.value === 'email'
-    ? 'Use the email address for your BikeMap account.'
+    ? 'Use the email address for your ShowMyRides account.'
     : 'Enter your password to finish logging in.',
 )
 
@@ -65,7 +65,7 @@ async function submitLogin() {
 
   try {
     await authStore.login(email.value.trim(), password.value, rememberMe.value)
-    toastStore.success('Welcome Back to BikeMap')
+    toastStore.success('Welcome Back to ShowMyRides')
     await router.push({ name: 'rides' })
   } catch (error) {
     formError.value = error instanceof ApiError ? error.message : 'Unable to log in.'

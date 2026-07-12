@@ -1,6 +1,6 @@
-# BikeMap
+# ShowMyRides
 
-BikeMap is a local-first cycling ride journal and mapping application. It pairs a Laravel API with a Vue frontend so rides can be uploaded, organized by location, viewed on maps, and compared as route overlays.
+ShowMyRides is a local-first cycling ride journal and mapping application. It pairs a Laravel API with a Vue frontend so rides can be uploaded, organized by location, viewed on maps, and compared as route overlays.
 
 ## Technologies
 
@@ -34,9 +34,9 @@ BikeMap is a local-first cycling ride journal and mapping application. It pairs 
 
 ## Watopia And ZwiftMap Attribution
 
-BikeMap's Watopia mapping support is inspired by and uses code/data ideas from [andipaetzold/zwiftmap](https://github.com/andipaetzold/zwiftmap).
+ShowMyRides' Watopia mapping support is inspired by and uses code/data ideas from [andipaetzold/zwiftmap](https://github.com/andipaetzold/zwiftmap).
 
-The Watopia map image and map configuration values were adapted from that project, including the local Watopia raster map asset and the Zwift world bounds used to place the image in Leaflet. The route points are not transformed by BikeMap; Watopia rides are drawn directly onto the georeferenced Watopia image overlay.
+The Watopia map image and map configuration values were adapted from that project, including the local Watopia raster map asset and the Zwift world bounds used to place the image in Leaflet. The route points are not transformed by ShowMyRides; Watopia rides are drawn directly onto the georeferenced Watopia image overlay.
 
 ## Local Development
 

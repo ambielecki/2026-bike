@@ -39,6 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/homepage', [HomepageController::class, 'adminShow']);
         Route::patch('/homepage', [HomepageController::class, 'update']);
         Route::post('/images', [AdminImageController::class, 'store']);
+        Route::patch('/images/{image}', [AdminImageController::class, 'update']);
+        Route::delete('/images/{image}', [AdminImageController::class, 'destroy']);
     });
 });
 

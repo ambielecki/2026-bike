@@ -87,7 +87,7 @@ describe('App', () => {
     })
 
     expect(wrapper.text()).toContain('Track every mountain bike route worth riding twice.')
-    expect(wrapper.text()).toContain('BikeMap')
+    expect(wrapper.text()).toContain('ShowMyRides')
     expect(wrapper.text()).toContain('Register')
     expect(wrapper.text()).toContain('Log In')
     expect(wrapper.text()).toContain('Save routes that matter')

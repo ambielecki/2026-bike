@@ -80,7 +80,7 @@ async function submitRide() {
       locationId: Number(locationId.value),
       fitFile: fitFile.value,
     })
-    toastStore.success('Ride added to BikeMap')
+    toastStore.success('Ride added to ShowMyRides')
     await router.push({ name: 'rides' })
   } catch (error) {
     formError.value = error instanceof ApiError ? error.message : 'Unable to add ride.'

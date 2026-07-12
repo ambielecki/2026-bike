@@ -3,13 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAdminImageRequest;
+use App\Http\Requests\UpdateAdminImageRequest;
 use App\Models\Image;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AdminImageController extends Controller
 {
+    private const IMAGE_SIZES = [
+        'original',
+        'small',
+        'medium',
+        'large',
+    ];
+
     public function store(StoreAdminImageRequest $request): JsonResponse
     {
         $validated = $request->validated();
@@ -30,12 +39,33 @@ class AdminImageController extends Controller
         ]);
 
         return response()->json([
-            'data' => [
-                'id' => $image->id,
-                'description' => $image->description,
-                'alt_text' => $image->alt_text ?: ($image->description ?? 'Homepage image'),
-                'urls' => $image->refresh()->urls(),
-            ],
+            'data' => $image->refresh()->apiData(),
         ], 201);
+    }
+
+    public function update(UpdateAdminImageRequest $request, Image $image): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $image->update([
+            'description' => $validated['description'] ?? null,
+            'alt_text' => $validated['alt_text'],
+        ]);
+
+        return response()->json([
+            'data' => $image->refresh()->apiData(),
+        ]);
+    }
+
+    public function destroy(Image $image): JsonResponse
+    {
+        $paths = collect(self::IMAGE_SIZES)
+            ->map(fn (string $size): string => $image->path($size))
+            ->all();
+
+        $image->delete();
+        Storage::disk('public')->delete($paths);
+
+        return response()->json(null, 204);
     }
 }

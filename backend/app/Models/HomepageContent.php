@@ -29,7 +29,7 @@ class HomepageContent extends Model
     public static function defaults(): array
     {
         return [
-            'site_name' => 'BikeMap',
+            'site_name' => 'ShowMyRides',
             'headline' => 'Track every mountain bike route worth riding twice.',
             'intro' => 'Keep a clean record of the trails you ride, remember the lines you liked, and build a personal map of every loop, climb, and descent.',
             'highlights' => [

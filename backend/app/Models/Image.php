@@ -37,6 +37,19 @@ class Image extends Model
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function apiData(): array
+    {
+        return [
+            'id' => $this->id,
+            'description' => $this->description,
+            'alt_text' => $this->alt_text ?: ($this->description ?? 'Homepage image'),
+            'urls' => $this->urls(),
+        ];
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

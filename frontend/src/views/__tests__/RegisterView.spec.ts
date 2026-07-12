@@ -96,7 +96,7 @@ describe('RegisterView', () => {
       'password',
       'password',
     )
-    expect(toastStore.toasts[0]?.message).toBe('Welcome to BikeMap')
+    expect(toastStore.toasts[0]?.message).toBe('Welcome to ShowMyRides')
     expect(router.currentRoute.value.name).toBe('home')
   })
 

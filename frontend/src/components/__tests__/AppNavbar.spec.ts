@@ -84,10 +84,10 @@ describe('AppNavbar', () => {
   it('shows guest account links when logged out', async () => {
     const { wrapper } = await mountNavbar()
 
-    expect(wrapper.text()).toContain('BikeMap')
+    expect(wrapper.text()).toContain('ShowMyRides')
     expect(wrapper.text()).toContain('Register')
     expect(wrapper.text()).toContain('Log In')
-    expect(wrapper.text()).not.toContain('Rides')
+    expect(wrapper.find('a[href="/rides"]').exists()).toBe(false)
     expect(wrapper.text()).not.toContain('Admin Tools')
   })
 
@@ -114,7 +114,7 @@ describe('AppNavbar', () => {
 
     expect(drawer.text()).toContain('Register')
     expect(drawer.text()).toContain('Log In')
-    expect(drawer.text()).not.toContain('Rides')
+    expect(drawer.find('a[href="/rides"]').exists()).toBe(false)
     expect(drawer.text()).not.toContain('Admin Tools')
   })
 

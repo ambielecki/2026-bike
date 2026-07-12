@@ -199,7 +199,7 @@ describe('AddRideView', () => {
       locationId: 1,
       fitFile,
     })
-    expect(toastStore.toasts[0]?.message).toBe('Ride added to BikeMap')
+    expect(toastStore.toasts[0]?.message).toBe('Ride added to ShowMyRides')
     expect(router.currentRoute.value.name).toBe('rides')
   })
 })

@@ -32,7 +32,7 @@ function closeMobileMenu() {
 
 <template>
   <header class="app-navbar">
-    <RouterLink class="brand-link" :to="{ name: 'home' }">BikeMap</RouterLink>
+    <RouterLink class="brand-link" :to="{ name: 'home' }">ShowMyRides</RouterLink>
 
     <button
       class="menu-button"
@@ -84,7 +84,7 @@ function closeMobileMenu() {
       <aside id="mobile-navigation" class="mobile-drawer" aria-label="Mobile navigation">
         <div class="drawer-header">
           <RouterLink class="brand-link" :to="{ name: 'home' }" @click="closeMobileMenu">
-            BikeMap
+            ShowMyRides
           </RouterLink>
           <button class="drawer-close" type="button" aria-label="Close navigation" @click="closeMobileMenu">
             ×

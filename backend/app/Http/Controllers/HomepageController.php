@@ -24,7 +24,7 @@ class HomepageController extends Controller
                 'available_images' => Image::query()
                     ->orderByDesc('created_at')
                     ->get()
-                    ->map(fn (Image $image): array => $this->imageData($image))
+                    ->map(fn (Image $image): array => $image->apiData())
                     ->values(),
             ],
         ]);
@@ -86,21 +86,8 @@ class HomepageController extends Controller
                 ->values()
                 ->all(),
             'carousel_images' => $content->carouselImages
-                ->map(fn (Image $image): array => $this->imageData($image))
+                ->map(fn (Image $image): array => $image->apiData())
                 ->values(),
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function imageData(Image $image): array
-    {
-        return [
-            'id' => $image->id,
-            'description' => $image->description,
-            'alt_text' => $image->alt_text ?: ($image->description ?? 'Homepage image'),
-            'urls' => $image->urls(),
         ];
     }
 }

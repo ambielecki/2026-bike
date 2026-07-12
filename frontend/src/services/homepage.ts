@@ -48,7 +48,7 @@ interface ApiData<T> {
 
 export const defaultHomepageContent: HomepageContent = {
   id: 0,
-  site_name: 'BikeMap',
+  site_name: 'ShowMyRides',
   headline: 'Track every mountain bike route worth riding twice.',
   intro:
     'Keep a clean record of the trails you ride, remember the lines you liked, and build a personal map of every loop, climb, and descent.',
@@ -107,4 +107,23 @@ export async function uploadHomepageImage(payload: {
   const response = await api.post<ApiData<HomepageImage>>('/api/admin/images', formData)
 
   return response.data
+}
+
+export async function updateHomepageImage(
+  id: number,
+  payload: {
+    description: string
+    altText: string
+  },
+) {
+  const response = await api.patch<ApiData<HomepageImage>>(`/api/admin/images/${id}`, {
+    description: payload.description.trim() || null,
+    alt_text: payload.altText.trim(),
+  })
+
+  return response.data
+}
+
+export async function deleteHomepageImage(id: number) {
+  await api.delete<void>(`/api/admin/images/${id}`)
 }

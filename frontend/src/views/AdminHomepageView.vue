@@ -6,8 +6,10 @@ import AppFileField from '@/components/form/AppFileField.vue'
 import AppTextarea from '@/components/form/AppTextarea.vue'
 import { ApiError } from '@/services/api'
 import {
+  deleteHomepageImage,
   getAdminHomepage,
   updateHomepage,
+  updateHomepageImage,
   uploadHomepageImage,
   type HomepageImage,
 } from '@/services/homepage'
@@ -38,6 +40,17 @@ const uploadFileError = ref('')
 const uploadAltTextError = ref('')
 const uploadFormError = ref('')
 const isUploading = ref(false)
+
+const editingImage = ref<HomepageImage | null>(null)
+const editImageDescription = ref('')
+const editImageAltText = ref('')
+const editImageAltTextError = ref('')
+const editImageFormError = ref('')
+const isImageSaving = ref(false)
+
+const deletingImage = ref<HomepageImage | null>(null)
+const deleteImageFormError = ref('')
+const isImageDeleting = ref(false)
 
 const selectedImageIds = computed(() => new Set(carouselImages.value.map((image) => image.id)))
 const unselectedImages = computed(() =>
@@ -247,6 +260,99 @@ function validateImageUpload() {
 
   return isValid
 }
+
+function openEditImageModal(image: HomepageImage) {
+  editingImage.value = image
+  editImageDescription.value = image.description ?? ''
+  editImageAltText.value = image.alt_text
+  editImageAltTextError.value = ''
+  editImageFormError.value = ''
+}
+
+function closeEditImageModal() {
+  if (isImageSaving.value) {
+    return
+  }
+
+  editingImage.value = null
+}
+
+async function submitImageEdit() {
+  if (!editingImage.value) {
+    return
+  }
+
+  editImageFormError.value = ''
+
+  if (!editImageAltText.value.trim()) {
+    editImageAltTextError.value = 'Alt text is required.'
+    return
+  }
+
+  editImageAltTextError.value = ''
+  isImageSaving.value = true
+
+  try {
+    const image = await updateHomepageImage(editingImage.value.id, {
+      description: editImageDescription.value,
+      altText: editImageAltText.value,
+    })
+
+    replaceImage(image)
+    editingImage.value = null
+    toastStore.success('Image updated')
+  } catch (error) {
+    editImageFormError.value = error instanceof ApiError ? error.message : 'Unable to update image.'
+  } finally {
+    isImageSaving.value = false
+  }
+}
+
+function openDeleteImageModal(image: HomepageImage) {
+  deletingImage.value = image
+  deleteImageFormError.value = ''
+}
+
+function closeDeleteImageModal() {
+  if (isImageDeleting.value) {
+    return
+  }
+
+  deletingImage.value = null
+}
+
+async function confirmImageDelete() {
+  if (!deletingImage.value) {
+    return
+  }
+
+  deleteImageFormError.value = ''
+  isImageDeleting.value = true
+
+  try {
+    const imageId = deletingImage.value.id
+
+    await deleteHomepageImage(imageId)
+    availableImages.value = availableImages.value.filter((image) => image.id !== imageId)
+    carouselImages.value = carouselImages.value.filter((image) => image.id !== imageId)
+    deletingImage.value = null
+    toastStore.success('Image deleted')
+  } catch (error) {
+    deleteImageFormError.value =
+      error instanceof ApiError ? error.message : 'Unable to delete image.'
+  } finally {
+    isImageDeleting.value = false
+  }
+}
+
+function replaceImage(updatedImage: HomepageImage) {
+  availableImages.value = availableImages.value.map((image) =>
+    image.id === updatedImage.id ? updatedImage : image,
+  )
+  carouselImages.value = carouselImages.value.map((image) =>
+    image.id === updatedImage.id ? updatedImage : image,
+  )
+}
 </script>
 
 <template>
@@ -271,7 +377,9 @@ function validateImageUpload() {
       <section class="editor-panel" aria-labelledby="highlights-title">
         <div class="panel-heading">
           <h2 id="highlights-title">Highlights</h2>
-          <button class="secondary-action" type="button" @click="addHighlight">Add Highlight</button>
+          <button class="secondary-action" type="button" @click="addHighlight">
+            Add Highlight
+          </button>
         </div>
 
         <ol class="editable-list">
@@ -315,7 +423,9 @@ function validateImageUpload() {
       <section class="editor-panel" aria-labelledby="carousel-title">
         <div class="panel-heading">
           <h2 id="carousel-title">Carousel Images</h2>
-          <button class="secondary-action" type="button" @click="openUploadModal">Upload Image</button>
+          <button class="secondary-action" type="button" @click="openUploadModal">
+            Upload Image
+          </button>
         </div>
 
         <p v-if="carouselImages.length === 0" class="status-text">No carousel images selected.</p>
@@ -344,8 +454,14 @@ function validateImageUpload() {
               >
                 Down
               </button>
-              <button class="danger-action" type="button" @click="removeCarouselImage(index)">
-                Remove
+              <button class="secondary-action" type="button" @click="openEditImageModal(image)">
+                Edit
+              </button>
+              <button class="danger-action" type="button" @click="openDeleteImageModal(image)">
+                Delete
+              </button>
+              <button class="secondary-action" type="button" @click="removeCarouselImage(index)">
+                Remove from carousel
               </button>
             </div>
           </li>
@@ -356,8 +472,18 @@ function validateImageUpload() {
           <ul class="image-grid">
             <li v-for="image in unselectedImages" :key="image.id">
               <img :src="image.urls.small" :alt="image.alt_text" />
+              <div>
+                <h4>{{ image.alt_text }}</h4>
+                <p>{{ image.description || 'No description' }}</p>
+              </div>
               <button class="secondary-action" type="button" @click="addCarouselImage(image)">
                 Add
+              </button>
+              <button class="secondary-action" type="button" @click="openEditImageModal(image)">
+                Edit
+              </button>
+              <button class="danger-action" type="button" @click="openDeleteImageModal(image)">
+                Delete
               </button>
             </li>
           </ul>
@@ -379,7 +505,12 @@ function validateImageUpload() {
         @click="closeUploadModal"
       ></button>
 
-      <section class="modal-panel" aria-labelledby="upload-image-title" aria-modal="true" role="dialog">
+      <section
+        class="modal-panel"
+        aria-labelledby="upload-image-title"
+        aria-modal="true"
+        role="dialog"
+      >
         <div class="modal-header">
           <h2 id="upload-image-title">Upload Image</h2>
           <button
@@ -422,6 +553,110 @@ function validateImageUpload() {
             </button>
           </div>
         </form>
+      </section>
+    </div>
+
+    <div v-if="editingImage" class="modal-layer" role="presentation">
+      <button
+        class="modal-backdrop"
+        type="button"
+        aria-label="Close image edit form"
+        @click="closeEditImageModal"
+      ></button>
+
+      <section
+        class="modal-panel"
+        aria-labelledby="edit-image-title"
+        aria-modal="true"
+        role="dialog"
+      >
+        <div class="modal-header">
+          <h2 id="edit-image-title">Edit Image</h2>
+          <button
+            class="close-button"
+            type="button"
+            aria-label="Close image edit form"
+            @click="closeEditImageModal"
+          >
+            ×
+          </button>
+        </div>
+
+        <p v-if="editImageFormError" class="form-error" role="alert">{{ editImageFormError }}</p>
+
+        <form class="upload-form" novalidate @submit.prevent="submitImageEdit">
+          <AuthTextField
+            id="edit-homepage-image-alt"
+            v-model="editImageAltText"
+            :error="editImageAltTextError"
+            label="Alt text"
+          />
+          <AppTextarea
+            id="edit-homepage-image-description"
+            v-model="editImageDescription"
+            label="Description"
+            :rows="3"
+          />
+
+          <div class="modal-actions">
+            <button class="secondary-action" type="button" @click="closeEditImageModal">
+              Cancel
+            </button>
+            <button class="primary-action" :disabled="isImageSaving" type="submit">
+              {{ isImageSaving ? 'Saving...' : 'Save Image' }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div v-if="deletingImage" class="modal-layer" role="presentation">
+      <button
+        class="modal-backdrop"
+        type="button"
+        aria-label="Close image delete confirmation"
+        @click="closeDeleteImageModal"
+      ></button>
+
+      <section
+        class="modal-panel"
+        aria-labelledby="delete-image-title"
+        aria-modal="true"
+        role="dialog"
+      >
+        <div class="modal-header">
+          <h2 id="delete-image-title">Delete Image</h2>
+          <button
+            class="close-button"
+            type="button"
+            aria-label="Close image delete confirmation"
+            @click="closeDeleteImageModal"
+          >
+            ×
+          </button>
+        </div>
+
+        <p class="confirm-text">
+          Delete {{ deletingImage.alt_text }}? This removes the image from the system and carousel.
+        </p>
+
+        <p v-if="deleteImageFormError" class="form-error" role="alert">
+          {{ deleteImageFormError }}
+        </p>
+
+        <div class="modal-actions">
+          <button class="secondary-action" type="button" @click="closeDeleteImageModal">
+            Cancel
+          </button>
+          <button
+            class="danger-action"
+            :disabled="isImageDeleting"
+            type="button"
+            @click="confirmImageDelete"
+          >
+            {{ isImageDeleting ? 'Deleting...' : 'Delete Image' }}
+          </button>
+        </div>
       </section>
     </div>
   </main>
@@ -500,6 +735,14 @@ h3 {
   line-height: 1.3;
 }
 
+h4 {
+  color: #142013;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 p,
 .status-text {
   color: #52614f;
@@ -561,6 +804,11 @@ p,
   display: grid;
   gap: 0.75rem;
   padding: 0.75rem;
+}
+
+.image-grid p {
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
 }
 
 .primary-action,
@@ -661,6 +909,11 @@ p,
 .modal-actions,
 .save-bar {
   justify-content: flex-end;
+}
+
+.confirm-text {
+  color: #142013;
+  line-height: 1.5;
 }
 
 .back-link:focus-visible,
