@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Location;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -35,7 +34,7 @@ class IndexRideRequest extends FormRequest
                     $query->where(function ($query) use ($userId): void {
                         $query
                             ->where('user_id', $userId)
-                            ->orWhere('system_key', Location::SYSTEM_KEY_WATOPIA);
+                            ->orWhereNotNull('system_key');
                     });
                 }),
             ],

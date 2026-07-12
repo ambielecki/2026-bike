@@ -18,7 +18,11 @@ class Location extends Model
 
     public const MAP_PROVIDER_OPENSTREETMAP = 'openstreetmap';
 
+    public const MAP_PROVIDER_MAKURI_ISLANDS = 'makuri-islands';
+
     public const MAP_PROVIDER_WATOPIA = 'watopia';
+
+    public const SYSTEM_KEY_MAKURI_ISLANDS = 'makuri-islands';
 
     public const SYSTEM_KEY_WATOPIA = 'watopia';
 
@@ -38,6 +42,21 @@ class Location extends Model
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public static function makuriIslandsAttributes(): array
+    {
+        return [
+            'name' => 'Makuri Islands',
+            'user_id' => null,
+            'system_key' => self::SYSTEM_KEY_MAKURI_ISLANDS,
+            'map_provider' => self::MAP_PROVIDER_MAKURI_ISLANDS,
+            'latitude' => -10.780440,
+            'longitude' => 165.829354,
+        ];
+    }
+
+    /**
      * @param  Builder<Location>  $query
      * @return Builder<Location>
      */
@@ -46,7 +65,7 @@ class Location extends Model
         return $query->where(function (Builder $query) use ($user): void {
             $query
                 ->where('user_id', $user->id)
-                ->orWhere('system_key', self::SYSTEM_KEY_WATOPIA);
+                ->orWhereNotNull('system_key');
         });
     }
 

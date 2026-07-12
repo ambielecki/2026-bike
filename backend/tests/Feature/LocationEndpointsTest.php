@@ -15,7 +15,7 @@ class LocationEndpointsTest extends TestCase
     {
         $user = User::factory()->create();
         $otherUser = User::factory()->create();
-        $location = Location::factory()->create([
+        Location::factory()->create([
             'name' => 'River Trail',
             'user_id' => $user->id,
         ]);
@@ -24,14 +24,14 @@ class LocationEndpointsTest extends TestCase
             'user_id' => $otherUser->id,
         ]);
         $watopia = Location::query()->where('system_key', Location::SYSTEM_KEY_WATOPIA)->firstOrFail();
+        $makuriIslands = Location::query()->where('system_key', Location::SYSTEM_KEY_MAKURI_ISLANDS)->firstOrFail();
 
         $response = $this->actingAs($user)->getJson('/api/locations');
 
         $response->assertOk()
-            ->assertJsonPath('data.0.id', $location->id)
-            ->assertJsonPath('data.1.id', $watopia->id)
-            ->assertJsonPath('data.1.system_key', 'watopia')
-            ->assertJsonPath('data.1.map_provider', 'watopia')
+            ->assertJsonFragment(['id' => $watopia->id, 'system_key' => 'watopia', 'map_provider' => 'watopia'])
+            ->assertJsonFragment(['id' => $makuriIslands->id, 'system_key' => 'makuri-islands', 'map_provider' => 'makuri-islands'])
+            ->assertJsonFragment(['name' => 'River Trail'])
             ->assertJsonMissing(['name' => 'Hidden Trail']);
     }
 

@@ -140,6 +140,33 @@ describe('RideRouteMap', () => {
     ])
   })
 
+  it('uses the Makuri Islands image overlay without OpenStreetMap tiles in Makuri Islands mode', async () => {
+    mount(RideRouteMap, {
+      props: {
+        mapProvider: 'makuri-islands',
+        routes: [],
+      },
+    })
+
+    await flushPromises()
+
+    expect(imageOverlayMock).toHaveBeenCalledWith(
+      expect.stringContaining('makuri-islands.png'),
+      [
+        [-10.73746, 165.76591],
+        [-10.85234, 165.88222],
+      ],
+      {
+        attribution: '&copy; Zwift',
+      },
+    )
+    expect(tileLayerMock).not.toHaveBeenCalled()
+    expect(fitBoundsMock).toHaveBeenCalledWith([
+      [-10.74367, 165.799463],
+      [-10.817209, 165.859244],
+    ])
+  })
+
   it('falls back to the first route point when no center is provided', async () => {
     mount(RideRouteMap, {
       props: {

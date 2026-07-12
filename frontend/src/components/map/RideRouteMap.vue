@@ -17,7 +17,7 @@ import {
   type Map,
 } from 'leaflet'
 
-import { watopiaMap } from '@/components/map/watopiaMap'
+import { zwiftMapForProvider } from '@/components/map/zwiftMaps'
 import type { MapProvider, RoutePoint } from '@/services/rides'
 
 interface MapCenter {
@@ -127,16 +127,17 @@ function renderBaseLayer() {
     map.removeLayer(baseLayer)
   }
 
-  baseLayer =
-    props.mapProvider === 'watopia'
-      ? imageOverlay(watopiaMap.imageUrl, watopiaMap.bounds, {
-          attribution: watopiaMap.attribution,
-        })
-      : tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors',
-          crossOrigin: true,
-          maxZoom: 19,
-        })
+  const zwiftMap = zwiftMapForProvider(props.mapProvider)
+
+  baseLayer = zwiftMap
+    ? imageOverlay(zwiftMap.imageUrl, zwiftMap.bounds, {
+        attribution: zwiftMap.attribution,
+      })
+    : tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        crossOrigin: true,
+        maxZoom: 19,
+      })
 
   baseLayer.addTo(map)
 }
@@ -205,8 +206,10 @@ function centerMap() {
     return
   }
 
-  if (props.mapProvider === 'watopia') {
-    map.fitBounds(watopiaMap.initialBounds)
+  const zwiftMap = zwiftMapForProvider(props.mapProvider)
+
+  if (zwiftMap) {
+    map.fitBounds(zwiftMap.initialBounds)
   }
 }
 
@@ -263,7 +266,7 @@ async function renderMapCanvas() {
   canvas.width = size.x
   canvas.height = size.y
 
-  context.fillStyle = props.mapProvider === 'watopia' ? '#0884e2' : '#e7ece2'
+  context.fillStyle = zwiftMapForProvider(props.mapProvider)?.backgroundColor ?? '#e7ece2'
   context.fillRect(0, 0, size.x, size.y)
   drawMapImages(context)
   drawRouteOverlay(context)
@@ -437,6 +440,10 @@ function canvasToBlob(canvas: HTMLCanvasElement) {
 
 .map-shell-watopia {
   background: #0884e2;
+}
+
+.map-shell-makuri-islands {
+  background: #7d9a35;
 }
 
 .map-canvas {

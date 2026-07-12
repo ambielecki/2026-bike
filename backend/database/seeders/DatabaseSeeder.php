@@ -28,6 +28,11 @@ class DatabaseSeeder extends Seeder
             Location::watopiaAttributes(),
         );
 
+        Location::query()->updateOrCreate(
+            ['system_key' => Location::SYSTEM_KEY_MAKURI_ISLANDS],
+            Location::makuriIslandsAttributes(),
+        );
+
         $this->call(HomepageContentSeeder::class);
     }
 }

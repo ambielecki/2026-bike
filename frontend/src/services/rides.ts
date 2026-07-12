@@ -10,7 +10,7 @@ export interface Location {
   longitude: string
 }
 
-export type MapProvider = 'openstreetmap' | 'watopia'
+export type MapProvider = 'openstreetmap' | 'watopia' | 'makuri-islands'
 
 export interface Ride {
   id: number
