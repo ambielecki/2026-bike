@@ -1,0 +1,47 @@
+<?php
+namespace Deployer;
+
+require 'recipe/common.php';
+
+// Config
+
+set('repository', 'git@github.com:ambielecki/2026-bike.git');
+
+add('shared_files', []);
+add('shared_dirs', []);
+add('writable_dirs', []);
+
+set('frontend_base', 'frontend');
+set('shared_files', [
+    '{{frontend_base}}/.env',
+    '{{frontend_base}}/.env.local',
+]);
+
+set('which-npm', function () {
+    return run('which npm');
+});
+
+task('copy-node', function () {
+    if (has('previous_release')) {
+        if (test('[ -d {{previous_release}}/{{frontend_base}}/node_modules ]')) {
+            run('cp -R {{previous_release}}/{{frontend_base}}/node_modules {{release_path}}/{{frontend_base}}');
+        }
+    }
+    run("cd {{release_path}}/{{frontend_base}} && {{which-npm}} install --frozen-lockfile");
+});
+
+task('npm-build', function () {
+    run("cd {{release_path}}/{{frontend_base}} && {{which-npm}} run build");
+});
+
+// Hosts
+
+host('')
+    ->set('remote_user', '')
+    ->set('deploy_path', '');
+
+// Hooks
+
+after('deploy:writable', 'copy-node');
+after('copy-node', 'npm-build');
+after('deploy:failed', 'deploy:unlock');
