@@ -30,13 +30,19 @@ ShowMyRides is a local-first cycling ride journal and mapping application. It pa
 - Overlay multiple rides from a single selected location for route comparison.
 - Adjust route color, opacity, and visibility controls on ride maps.
 - Use OpenStreetMap for normal outdoor locations.
-- Use a Watopia image map for Zwift Watopia rides, including route overlays plotted directly from GPS coordinates.
+- Use image maps for Zwift Watopia and Makuri Islands rides, including route overlays plotted directly from GPS coordinates.
 
-## Watopia And ZwiftMap Attribution
+## ZwiftMap Attribution
 
-ShowMyRides' Watopia mapping support is inspired by and uses code/data ideas from [andipaetzold/zwiftmap](https://github.com/andipaetzold/zwiftmap).
+ShowMyRides' Zwift mapping support is inspired by and uses code/data ideas from [andipaetzold/zwiftmap](https://github.com/andipaetzold/zwiftmap).
 
-The Watopia map image and map configuration values were adapted from that project, including the local Watopia raster map asset and the Zwift world bounds used to place the image in Leaflet. The route points are not transformed by ShowMyRides; Watopia rides are drawn directly onto the georeferenced Watopia image overlay.
+The Watopia and Makuri Islands map images and map configuration values were adapted from that project, including the local raster map assets and the Zwift world bounds used to place each image in Leaflet. The route points are not transformed by ShowMyRides; Zwift rides are drawn directly onto georeferenced image overlays.
+
+Third-party license notices are maintained in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## License
+
+ShowMyRides is licensed under the [MIT License](LICENSE). Third-party software, data, and asset notices are documented separately in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Local Development
 
