@@ -199,4 +199,37 @@ describe('auth store', () => {
       password_confirmation: 'new-password',
     })
   })
+
+  it('deletes the current user account and clears the current user', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(new Response(null, { status: 204 }))
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const authStore = useAuthStore()
+    authStore.currentUser = {
+      id: 1,
+      name: 'Rider',
+      email: 'rider@example.com',
+      is_admin: false,
+    }
+
+    await authStore.deleteAccount('Delete My ShowMyRides Account')
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://api.example.test/api/user',
+      expect.objectContaining({
+        credentials: 'include',
+        method: 'DELETE',
+      }),
+    )
+
+    const body = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string) as {
+      confirmation_phrase: string
+    }
+
+    expect(body).toEqual({
+      confirmation_phrase: 'Delete My ShowMyRides Account',
+    })
+    expect(authStore.currentUser).toBeNull()
+  })
 })

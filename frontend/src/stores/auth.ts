@@ -61,6 +61,18 @@ export const useAuthStore = defineStore('auth', () => {
     })
   }
 
+  async function deleteAccount(confirmationPhrase: string) {
+    await api.delete<void>('/api/user', {
+      body: JSON.stringify({
+        confirmation_phrase: confirmationPhrase,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    currentUser.value = null
+  }
+
   async function loadCurrentUser() {
     if (isLoading.value) {
       return
@@ -113,6 +125,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAdmin,
     isAuthenticated,
     isLoading,
+    deleteAccount,
     login,
     loadCurrentUser,
     logout,

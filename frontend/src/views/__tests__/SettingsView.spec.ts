@@ -24,6 +24,13 @@ async function mountSettingsView() {
         name: 'settings-locations',
         component: LocationSettingsView,
       },
+      {
+        path: '/',
+        name: 'home',
+        component: {
+          template: '<main>Home</main>',
+        },
+      },
     ],
   })
 
@@ -67,6 +74,7 @@ describe('SettingsView', () => {
     expect(wrapper.text()).toContain('rider@example.com')
     expect(wrapper.text()).toContain('Password')
     expect(wrapper.get('a[href="/settings/locations"]').text()).toBe('Manage Locations')
+    expect(wrapper.text()).toContain('Delete Account')
   })
 
   it('validates profile name before saving', async () => {
@@ -151,5 +159,40 @@ describe('SettingsView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('The password field confirmation does not match.')
+  })
+
+  it('requires the exact confirmation phrase before deleting the account', async () => {
+    const { authStore, wrapper } = await mountSettingsView()
+    const deleteAccountSpy = vi.spyOn(authStore, 'deleteAccount').mockResolvedValue()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Delete Account')
+      ?.trigger('click')
+    await wrapper.find('#settings-delete-confirmation').setValue('Delete My Account')
+    await wrapper.findAll('form')[2]?.trigger('submit')
+
+    expect(deleteAccountSpy).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('Enter "Delete My ShowMyRides Account" to confirm.')
+  })
+
+  it('deletes the account, clears auth state, and redirects home', async () => {
+    const { authStore, router, toastStore, wrapper } = await mountSettingsView()
+    const deleteAccountSpy = vi.spyOn(authStore, 'deleteAccount').mockImplementation(async () => {
+      authStore.currentUser = null
+    })
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Delete Account')
+      ?.trigger('click')
+    await wrapper.find('#settings-delete-confirmation').setValue('Delete My ShowMyRides Account')
+    await wrapper.findAll('form')[2]?.trigger('submit')
+    await flushPromises()
+
+    expect(deleteAccountSpy).toHaveBeenCalledWith('Delete My ShowMyRides Account')
+    expect(authStore.currentUser).toBeNull()
+    expect(toastStore.toasts[0]?.message).toBe('Account deleted')
+    expect(router.currentRoute.value.name).toBe('home')
   })
 })

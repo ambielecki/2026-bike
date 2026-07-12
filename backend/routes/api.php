@@ -24,6 +24,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::delete('/user', [UserSettingsController::class, 'destroy']);
     Route::patch('/user/name', [UserSettingsController::class, 'updateName']);
     Route::patch('/user/password', [UserSettingsController::class, 'updatePassword']);
     Route::get('/locations', [LocationController::class, 'index']);
