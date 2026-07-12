@@ -1,0 +1,46 @@
+<?php
+namespace Deployer;
+
+require 'recipe/laravel.php';
+
+// Config
+
+set('repository', 'git@github.com:ambielecki/2026-bike.git');
+set('laravel_src', 'backend');
+set('writable_dirs', [
+    '{{laravel_src}}/storage',
+    '{{laravel_src}}/bootstrap/cache',
+]);
+
+set('shared_dirs', [
+    '{{laravel_src}}/storage',
+]);
+
+set('shared_files', [
+    '{{laravel_src}}/.env',
+]);
+
+// 3. Override the working path for Composer and Artisan commands
+set('release_path_with_src', function () {
+    return get('release_path') . '/' . get('laravel_src');
+});
+
+set('composer_options', '--verbose --prefer-dist --no-progress --no-interaction --no-dev --optimize-autoloader --working-dir={{release_path_with_src}}');
+
+// 4. Point artisan tasks to the subdirectory
+set('bin/artisan', '{{release_path_with_src}}/artisan');
+set('log_files', 'storage/logs/*.log');
+
+add('shared_files', []);
+add('shared_dirs', []);
+add('writable_dirs', []);
+
+// Hosts
+
+host('')
+    ->set('remote_user', '')
+    ->set('deploy_path', '');
+
+// Hooks
+
+after('deploy:failed', 'deploy:unlock');
