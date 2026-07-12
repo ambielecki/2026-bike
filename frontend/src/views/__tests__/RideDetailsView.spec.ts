@@ -19,7 +19,7 @@ const mockedGetRide = vi.mocked(getRide)
 const mockedUpdateRide = vi.mocked(updateRide)
 
 const routeMapStub = {
-  props: ['center', 'mapProvider', 'opacity', 'routes'],
+  props: ['center', 'downloadFilenameBase', 'mapProvider', 'opacity', 'routes'],
   template:
     '<div class="route-map-stub" :data-map-provider="mapProvider" :data-opacity="opacity">{{ routes.length }} route overlays</div>',
 }
@@ -132,6 +132,7 @@ describe('RideDetailsView', () => {
       latitude: 40,
       longitude: -79,
     })
+    expect(map.props('downloadFilenameBase')).toBe('North Park')
     expect(map.props('mapProvider')).toBe('openstreetmap')
   })
 

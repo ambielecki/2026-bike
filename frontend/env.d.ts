@@ -23,9 +23,16 @@ declare module 'leaflet' {
     addTo(map: Map): this
   }
 
+  export interface Point {
+    x: number
+    y: number
+  }
+
   export interface Map {
     fitBounds(bounds: [[number, number], [number, number]]): this
+    getSize(): Point
     invalidateSize(): this
+    latLngToContainerPoint(latLng: LatLng): Point
     remove(): this
     removeLayer(layer: Layer): this
     setView(center: [number, number], zoom: number): this
@@ -33,11 +40,13 @@ declare module 'leaflet' {
 
   export interface TileLayerOptions {
     attribution?: string
+    crossOrigin?: boolean | string
     maxZoom?: number
   }
 
   export interface ImageOverlayOptions {
     attribution?: string
+    crossOrigin?: boolean | string
   }
 
   export interface PolylineOptions {
@@ -59,7 +68,10 @@ declare module 'leaflet' {
       scrollWheelZoom?: boolean
     },
   ): Map
-  export function marker(latLng: LatLng, options?: MarkerOptions): { addTo(layer: LayerGroup): unknown }
+  export function marker(
+    latLng: LatLng,
+    options?: MarkerOptions,
+  ): { addTo(layer: LayerGroup): unknown }
   export function polyline(
     latLngs: LatLng[],
     options?: PolylineOptions,

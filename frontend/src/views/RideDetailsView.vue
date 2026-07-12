@@ -76,7 +76,9 @@ const mapCenter = computed(() => {
   return ride.value?.route_data[0] ?? null
 })
 
-const mapProvider = computed<MapProvider>(() => ride.value?.location?.map_provider ?? 'openstreetmap')
+const mapProvider = computed<MapProvider>(
+  () => ride.value?.location?.map_provider ?? 'openstreetmap',
+)
 
 onMounted(() => {
   void loadRide()
@@ -251,6 +253,7 @@ function formatDuration(value: string | null) {
         <div class="map-column">
           <RideRouteMap
             :center="mapCenter"
+            :download-filename-base="ride.location?.name ?? ride.name"
             :map-provider="mapProvider"
             :opacity="routeOpacity"
             :routes="mapRoutes"

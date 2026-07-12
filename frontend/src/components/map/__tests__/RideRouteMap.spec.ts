@@ -7,9 +7,17 @@ import RideRouteMap from '@/components/map/RideRouteMap.vue'
 const addToMock = vi.fn().mockReturnThis()
 const clearLayersMock = vi.fn().mockReturnThis()
 const invalidateSizeMock = vi.fn().mockReturnThis()
+const latLngToContainerPointMock = vi.fn((point: { lat: number; lng: number }) => ({
+  x: point.lng,
+  y: point.lat,
+}))
 const removeMock = vi.fn().mockReturnThis()
 const removeLayerMock = vi.fn().mockReturnThis()
 const fitBoundsMock = vi.fn().mockReturnThis()
+const getSizeMock = vi.fn(() => ({
+  x: 640,
+  y: 480,
+}))
 const setViewMock = vi.fn().mockReturnThis()
 
 vi.mock('leaflet', () => ({
@@ -23,7 +31,9 @@ vi.mock('leaflet', () => ({
   })),
   map: vi.fn(() => ({
     fitBounds: fitBoundsMock,
+    getSize: getSizeMock,
     invalidateSize: invalidateSizeMock,
+    latLngToContainerPoint: latLngToContainerPointMock,
     remove: removeMock,
     removeLayer: removeLayerMock,
     setView: setViewMock,
@@ -97,6 +107,7 @@ describe('RideRouteMap', () => {
 
     expect(tileLayerMock).toHaveBeenCalledWith('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
+      crossOrigin: true,
       maxZoom: 19,
     })
     expect(imageOverlayMock).not.toHaveBeenCalled()
@@ -181,5 +192,85 @@ describe('RideRouteMap', () => {
     await flushPromises()
 
     expect(markerMock).not.toHaveBeenCalled()
+  })
+
+  it('downloads the current map view as a PNG image', async () => {
+    const clickMock = vi.fn()
+    const createObjectUrlMock = vi.fn(() => 'blob:map-image')
+    const revokeObjectUrlMock = vi.fn()
+    const drawImageMock = vi.fn()
+    let downloadFilename = ''
+    const originalCreateElement = document.createElement.bind(document)
+    const originalCreateObjectURL = URL.createObjectURL
+    const originalRevokeObjectURL = URL.revokeObjectURL
+
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: createObjectUrlMock,
+    })
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: revokeObjectUrlMock,
+    })
+    const createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName, options) => {
+        const element = originalCreateElement(tagName, options)
+
+        if (tagName === 'canvas') {
+          vi.spyOn(element as HTMLCanvasElement, 'getContext').mockReturnValue({
+            arc: vi.fn(),
+            beginPath: vi.fn(),
+            drawImage: drawImageMock,
+            fill: vi.fn(),
+            fillRect: vi.fn(),
+            lineTo: vi.fn(),
+            moveTo: vi.fn(),
+            restore: vi.fn(),
+            save: vi.fn(),
+            stroke: vi.fn(),
+          } as unknown as CanvasRenderingContext2D)
+          vi.spyOn(element as HTMLCanvasElement, 'toBlob').mockImplementation((callback) => {
+            callback(new Blob(['map'], { type: 'image/png' }))
+          })
+        }
+
+        if (tagName === 'a') {
+          vi.spyOn(element as HTMLAnchorElement, 'click').mockImplementation(() => {
+            downloadFilename = (element as HTMLAnchorElement).download
+            clickMock()
+          })
+        }
+
+        return element
+      })
+
+    try {
+      const wrapper = mount(RideRouteMap, {
+        props: {
+          downloadFilenameBase: 'North Park',
+          routes: [route],
+        },
+      })
+      await flushPromises()
+
+      await wrapper.get('button[aria-label="Download map image"]').trigger('click')
+      await flushPromises()
+
+      expect(createObjectUrlMock).toHaveBeenCalledWith(expect.any(Blob))
+      expect(clickMock).toHaveBeenCalledOnce()
+      expect(latLngToContainerPointMock).toHaveBeenCalled()
+      expect(downloadFilename).toMatch(/^north-park-\d{4}-\d{2}-\d{2}\.png$/)
+    } finally {
+      createElementSpy.mockRestore()
+      Object.defineProperty(URL, 'createObjectURL', {
+        configurable: true,
+        value: originalCreateObjectURL,
+      })
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        configurable: true,
+        value: originalRevokeObjectURL,
+      })
+    }
   })
 })

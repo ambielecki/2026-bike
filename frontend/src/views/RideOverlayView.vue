@@ -30,7 +30,14 @@ interface MapRoute {
 }
 
 const fallbackRouteColor = '#1f7a4d'
-const defaultRouteColors = [fallbackRouteColor, '#255f85', '#9a4c1e', '#6f3f91', '#ad2f45', '#627100']
+const defaultRouteColors = [
+  fallbackRouteColor,
+  '#255f85',
+  '#9a4c1e',
+  '#6f3f91',
+  '#ad2f45',
+  '#627100',
+]
 
 const locations = ref<Location[]>([])
 const rides = ref<RideListItem[]>([])
@@ -62,10 +69,12 @@ const locationOptions = computed(() =>
   })),
 )
 
-const selectedLocation = computed(() =>
-  locations.value.find((location) => String(location.id) === locationId.value) ?? null,
+const selectedLocation = computed(
+  () => locations.value.find((location) => String(location.id) === locationId.value) ?? null,
 )
-const mapProvider = computed<MapProvider>(() => selectedLocation.value?.map_provider ?? 'openstreetmap')
+const mapProvider = computed<MapProvider>(
+  () => selectedLocation.value?.map_provider ?? 'openstreetmap',
+)
 
 const hasMoreRides = computed(() => meta.value.current_page < meta.value.last_page)
 
@@ -177,7 +186,9 @@ async function addRoute(ride: RideListItem) {
     selectedRoutes.value = [
       ...selectedRoutes.value,
       {
-        color: defaultRouteColors[selectedRoutes.value.length % defaultRouteColors.length] ?? fallbackRouteColor,
+        color:
+          defaultRouteColors[selectedRoutes.value.length % defaultRouteColors.length] ??
+          fallbackRouteColor,
         ride: rideDetails,
       },
     ]
@@ -189,7 +200,9 @@ async function addRoute(ride: RideListItem) {
 }
 
 function removeRoute(rideId: number) {
-  selectedRoutes.value = selectedRoutes.value.filter((selectedRoute) => selectedRoute.ride.id !== rideId)
+  selectedRoutes.value = selectedRoutes.value.filter(
+    (selectedRoute) => selectedRoute.ride.id !== rideId,
+  )
 }
 
 function updateRouteColor(rideId: number, event: Event) {
@@ -245,6 +258,7 @@ function emptyMeta(): PaginationMeta {
       <div class="map-column">
         <RideRouteMap
           :center="mapCenter"
+          :download-filename-base="selectedLocation?.name ?? 'ride-map'"
           :map-provider="mapProvider"
           :opacity="routeOpacity"
           :routes="mapRoutes"
@@ -271,10 +285,14 @@ function emptyMeta(): PaginationMeta {
 
           <label class="control-field compact-control" for="overlay-global-color">
             <span>Override color</span>
-            <input id="overlay-global-color" v-model="globalColor" :disabled="!useGlobalColor" type="color" />
+            <input
+              id="overlay-global-color"
+              v-model="globalColor"
+              :disabled="!useGlobalColor"
+              type="color"
+            />
           </label>
         </section>
-
       </div>
 
       <aside class="ride-panel" aria-label="Overlay ride list">

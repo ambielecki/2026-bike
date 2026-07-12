@@ -14,7 +14,7 @@ vi.mock('@/services/rides', () => ({
 
 const routeMapStub = {
   name: 'RideRouteMap',
-  props: ['center', 'mapProvider', 'opacity', 'routes', 'showMarkers'],
+  props: ['center', 'downloadFilenameBase', 'mapProvider', 'opacity', 'routes', 'showMarkers'],
   template: '<div class="route-map-stub"></div>',
 }
 
@@ -160,6 +160,7 @@ describe('RideOverlayView', () => {
       latitude: 40,
       longitude: -79,
     })
+    expect(wrapper.getComponent(routeMapStub).props('downloadFilenameBase')).toBe('North Park')
     expect(wrapper.getComponent(routeMapStub).props('mapProvider')).toBe('openstreetmap')
   })
 
@@ -196,7 +197,10 @@ describe('RideOverlayView', () => {
 
     await wrapper.find('#overlay-location').setValue('1')
     await flushPromises()
-    await wrapper.findAll('button').find((button) => button.text() === 'Add')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Add')
+      ?.trigger('click')
     await flushPromises()
 
     expect(wrapper.find('.selected-routes').exists()).toBe(false)
@@ -227,54 +231,64 @@ describe('RideOverlayView', () => {
 
     expect(wrapper.getComponent(routeMapStub).props('routes')[0].color).toBe('#ad2f45')
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Remove')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Remove')
+      ?.trigger('click')
     await flushPromises()
 
     expect(wrapper.getComponent(routeMapStub).props('routes')).toEqual([])
   })
 
   it('loads more rides by appending the next page', async () => {
-    mockedGetRides.mockResolvedValueOnce(ridesResponse({
-      meta: {
-        current_page: 1,
-        from: 1,
-        last_page: 2,
-        per_page: 50,
-        to: 50,
-        total: 51,
-      },
-    }))
-    mockedGetRides.mockResolvedValueOnce(ridesResponse({
-      data: [
-        {
-          id: 11,
-          name: 'Evening Ride',
-          datetime: '2026-07-05T12:30:00.000000Z',
-          distance: '8.10',
-          total_time: '2400.00',
-          location: {
-            id: 1,
-            name: 'North Park',
-            system_key: null,
-            map_provider: 'openstreetmap' as const,
-          },
+    mockedGetRides.mockResolvedValueOnce(
+      ridesResponse({
+        meta: {
+          current_page: 1,
+          from: 1,
+          last_page: 2,
+          per_page: 50,
+          to: 50,
+          total: 51,
         },
-      ],
-      meta: {
-        current_page: 2,
-        from: 51,
-        last_page: 2,
-        per_page: 50,
-        to: 51,
-        total: 51,
-      },
-    }))
+      }),
+    )
+    mockedGetRides.mockResolvedValueOnce(
+      ridesResponse({
+        data: [
+          {
+            id: 11,
+            name: 'Evening Ride',
+            datetime: '2026-07-05T12:30:00.000000Z',
+            distance: '8.10',
+            total_time: '2400.00',
+            location: {
+              id: 1,
+              name: 'North Park',
+              system_key: null,
+              map_provider: 'openstreetmap' as const,
+            },
+          },
+        ],
+        meta: {
+          current_page: 2,
+          from: 51,
+          last_page: 2,
+          per_page: 50,
+          to: 51,
+          total: 51,
+        },
+      }),
+    )
 
     const { wrapper } = await mountRideOverlayView()
 
     await wrapper.find('#overlay-location').setValue('1')
     await flushPromises()
-    await wrapper.findAll('button').find((button) => button.text() === 'Load more')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Load more')
+      ?.trigger('click')
     await flushPromises()
 
     expect(mockedGetRides).toHaveBeenLastCalledWith({
