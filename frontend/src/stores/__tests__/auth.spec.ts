@@ -129,6 +129,44 @@ describe('auth store', () => {
     expect(authStore.currentUser?.name).toBe('New Rider')
   })
 
+  it('shares an in-flight current user request across concurrent callers', async () => {
+    let resolveResponse: (response: Response) => void = () => {}
+    const userResponse = new Promise<Response>((resolve) => {
+      resolveResponse = resolve
+    })
+    const fetchMock = vi.fn().mockReturnValue(userResponse)
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const authStore = useAuthStore()
+    const firstLoad = authStore.loadCurrentUser()
+    const secondLoad = authStore.loadCurrentUser()
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(authStore.isLoading).toBe(true)
+
+    resolveResponse(
+      new Response(
+        JSON.stringify({
+          id: 1,
+          name: 'Admin Rider',
+          email: 'admin@example.com',
+          is_admin: true,
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    )
+
+    await Promise.all([firstLoad, secondLoad])
+
+    expect(authStore.currentUser?.email).toBe('admin@example.com')
+    expect(authStore.isAdmin).toBe(true)
+    expect(authStore.isLoading).toBe(false)
+  })
+
   it('updates the current user name', async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(
       new Response(

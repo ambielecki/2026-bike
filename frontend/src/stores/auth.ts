@@ -13,6 +13,7 @@ export interface AuthUser {
 export const useAuthStore = defineStore('auth', () => {
   const currentUser = ref<AuthUser | null>(null)
   const isLoading = ref(false)
+  let currentUserRequest: Promise<void> | null = null
 
   const isAuthenticated = computed(() => currentUser.value !== null)
   const isAdmin = computed(() => currentUser.value?.is_admin === true)
@@ -74,12 +75,22 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function loadCurrentUser() {
-    if (isLoading.value) {
-      return
+    if (currentUserRequest) {
+      return currentUserRequest
     }
 
     isLoading.value = true
+    currentUserRequest = fetchCurrentUser()
 
+    try {
+      await currentUserRequest
+    } finally {
+      currentUserRequest = null
+      isLoading.value = false
+    }
+  }
+
+  async function fetchCurrentUser() {
     try {
       const response = await fetch(`${apiBaseUrl()}/api/user`, {
         credentials: 'include',
@@ -105,8 +116,6 @@ export const useAuthStore = defineStore('auth', () => {
       }
     } catch {
       currentUser.value = null
-    } finally {
-      isLoading.value = false
     }
   }
 
