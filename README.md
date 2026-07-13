@@ -64,3 +64,7 @@ Frontend commands run from `frontend/` with Node 26:
 npm run type-check
 npm run test:unit -- --run
 ```
+
+## Deployment
+
+ShowMyRides is deployed to a DigitalOcean Droplet running PHP 8.5. Deployments are managed with the [`deployer/deployer`](https://deployer.org/) package.
