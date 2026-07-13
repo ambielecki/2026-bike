@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminImageController;
+use App\Http\Controllers\AdminStatsController;
 use App\Http\Controllers\HomepageController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\RideController;
@@ -37,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/rides/{ride}', [RideController::class, 'destroy']);
 
     Route::middleware(EnsureUserIsAdmin::class)->prefix('admin')->group(function () {
+        Route::get('/stats', [AdminStatsController::class, 'show']);
         Route::get('/homepage', [HomepageController::class, 'adminShow']);
         Route::patch('/homepage', [HomepageController::class, 'update']);
         Route::post('/images', [AdminImageController::class, 'store']);
