@@ -1,17 +1,7 @@
 import { pinia } from '@/plugins/pinia'
 import { useAuthStore } from '@/stores/auth'
 import { createRouter, createWebHistory } from 'vue-router'
-import AdminDashboardView from '@/views/AdminDashboardView.vue'
-import AdminHomepageView from '@/views/AdminHomepageView.vue'
-import AddRideView from '@/views/AddRideView.vue'
 import HomeView from '@/views/HomeView.vue'
-import LocationSettingsView from '@/views/LocationSettingsView.vue'
-import LoginView from '@/views/LoginView.vue'
-import RegisterView from '@/views/RegisterView.vue'
-import RideDetailsView from '@/views/RideDetailsView.vue'
-import RideListView from '@/views/RideListView.vue'
-import RideOverlayView from '@/views/RideOverlayView.vue'
-import SettingsView from '@/views/SettingsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,27 +14,27 @@ const router = createRouter({
     {
       path: '/rides',
       name: 'rides',
-      component: RideListView,
+      component: () => import('@/views/RideListView.vue'),
     },
     {
       path: '/rides/add',
       name: 'add-ride',
-      component: AddRideView,
+      component: () => import('@/views/AddRideView.vue'),
     },
     {
       path: '/rides/overlay',
       name: 'ride-overlay',
-      component: RideOverlayView,
+      component: () => import('@/views/RideOverlayView.vue'),
     },
     {
       path: '/rides/:id',
       name: 'ride-details',
-      component: RideDetailsView,
+      component: () => import('@/views/RideDetailsView.vue'),
     },
     {
       path: '/admin',
       name: 'admin-tools',
-      component: AdminDashboardView,
+      component: () => import('@/views/AdminDashboardView.vue'),
       meta: {
         requiresAuth: true,
         requiresAdmin: true,
@@ -53,7 +43,7 @@ const router = createRouter({
     {
       path: '/admin/home',
       name: 'admin-homepage',
-      component: AdminHomepageView,
+      component: () => import('@/views/AdminHomepageView.vue'),
       meta: {
         requiresAuth: true,
         requiresAdmin: true,
@@ -62,22 +52,22 @@ const router = createRouter({
     {
       path: '/settings',
       name: 'settings',
-      component: SettingsView,
+      component: () => import('@/views/SettingsView.vue'),
     },
     {
       path: '/settings/locations',
       name: 'settings-locations',
-      component: LocationSettingsView,
+      component: () => import('@/views/LocationSettingsView.vue'),
     },
     {
       path: '/register',
       name: 'register',
-      component: RegisterView,
+      component: () => import('@/views/RegisterView.vue'),
     },
     {
       path: '/login',
       name: 'login',
-      component: LoginView,
+      component: () => import('@/views/LoginView.vue'),
     },
   ],
 })
