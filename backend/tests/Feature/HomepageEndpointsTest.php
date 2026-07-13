@@ -20,8 +20,9 @@ class HomepageEndpointsTest extends TestCase
         $response = $this->getJson('/api/homepage');
 
         $response->assertOk()
-            ->assertJsonPath('data.site_name', 'ShowMyRides')
-            ->assertJsonPath('data.headline', 'Track every mountain bike route worth riding twice.')
+            ->assertJsonMissingPath('data.site_name')
+            ->assertJsonMissingPath('data.headline')
+            ->assertJsonMissingPath('data.intro')
             ->assertJsonPath('data.highlights.0.title', 'Save routes that matter')
             ->assertJsonPath('data.carousel_images', []);
     }
@@ -57,9 +58,6 @@ class HomepageEndpointsTest extends TestCase
         ]);
 
         $response = $this->actingAs($admin)->patchJson('/api/admin/homepage', [
-            'site_name' => 'Trail Home',
-            'headline' => 'Ride the best loops.',
-            'intro' => 'Updated homepage intro.',
             'highlights' => [
                 [
                     'title' => 'Plan',
@@ -74,14 +72,15 @@ class HomepageEndpointsTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.site_name', 'Trail Home')
+            ->assertJsonMissingPath('data.site_name')
+            ->assertJsonMissingPath('data.headline')
+            ->assertJsonMissingPath('data.intro')
             ->assertJsonPath('data.highlights.1.sort_order', 1)
             ->assertJsonPath('data.carousel_images.0.id', $secondImage->id)
             ->assertJsonPath('data.carousel_images.1.id', $firstImage->id);
 
         $this->assertDatabaseHas('homepage_contents', [
-            'site_name' => 'Trail Home',
-            'headline' => 'Ride the best loops.',
+            'id' => 1,
         ]);
         $this->assertDatabaseHas('homepage_carousel_images', [
             'image_id' => $secondImage->id,

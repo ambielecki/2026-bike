@@ -7,6 +7,11 @@ import {
   type HomepageContent,
 } from '@/services/homepage'
 
+const siteName = 'ShowMyRides'
+const headline = 'Track every route and see where you have been'
+const intro =
+  'Keep a clean record of the trails you ride, remember the lines you liked, and build a personal map of every loop, climb, and descent. Even track rides from Zwift in Watopia or Makuri Islands.'
+
 const content = ref<HomepageContent>(defaultHomepageContent)
 const activeImageIndex = ref(0)
 
@@ -51,9 +56,9 @@ function nextImage() {
     <v-container class="fill-height">
       <v-row align="center" class="hero-row" justify="space-between">
         <v-col cols="12" md="6">
-          <div class="eyebrow">{{ content.site_name }}</div>
-          <h1 class="headline">{{ content.headline }}</h1>
-          <p class="intro">{{ content.intro }}</p>
+          <div class="eyebrow">{{ siteName }}</div>
+          <h1 class="headline">{{ headline }}</h1>
+          <p class="intro">{{ intro }}</p>
         </v-col>
 
         <v-col cols="12" md="5">
@@ -63,6 +68,7 @@ function nextImage() {
                 class="carousel-image"
                 :src="activeImage.urls.large"
                 :alt="activeImage.alt_text"
+                loading="lazy"
               />
               <div class="carousel-footer">
                 <p v-if="activeImage.description">{{ activeImage.description }}</p>
@@ -77,8 +83,7 @@ function nextImage() {
             </template>
 
             <div v-else class="carousel-empty">
-              <div class="empty-mark" aria-hidden="true"></div>
-              <p>{{ content.site_name }}</p>
+              <span class="sr-only">No homepage images selected.</span>
             </div>
           </section>
         </v-col>
@@ -86,7 +91,7 @@ function nextImage() {
     </v-container>
   </section>
 
-  <section id="highlights" class="highlights">
+  <section v-if="content.highlights.length" id="highlights" class="highlights">
     <v-container>
       <v-row>
         <v-col
@@ -168,8 +173,7 @@ function nextImage() {
   padding: 1rem;
 }
 
-.carousel-footer p,
-.carousel-empty p {
+.carousel-footer p {
   color: #52614f;
   line-height: 1.5;
   margin: 0;
@@ -200,19 +204,20 @@ function nextImage() {
 }
 
 .carousel-empty {
-  align-content: center;
-  justify-items: center;
+  background: #f2f0e8;
   min-height: 28rem;
-  text-align: center;
 }
 
-.empty-mark {
-  background:
-    linear-gradient(135deg, rgba(53, 94, 59, 0.34), rgba(214, 121, 69, 0.32)),
-    linear-gradient(160deg, #eef4e6, #f8f6f0);
-  border-radius: 0.5rem;
-  height: 14rem;
-  width: min(100%, 22rem);
+.sr-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 0.0625rem;
+  margin: -0.0625rem;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 0.0625rem;
 }
 
 .highlights {

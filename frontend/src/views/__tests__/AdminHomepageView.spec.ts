@@ -52,9 +52,6 @@ const availableImage = {
 function homepageContent() {
   return {
     id: 1,
-    site_name: 'ShowMyRides',
-    headline: 'Ride the best loops.',
-    intro: 'Homepage intro.',
     highlights: [
       {
         title: 'Plan',

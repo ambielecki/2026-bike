@@ -22,9 +22,6 @@ class UpdateHomepageContentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'site_name' => ['required', 'string', 'max:255'],
-            'headline' => ['required', 'string', 'max:255'],
-            'intro' => ['required', 'string'],
             'highlights' => ['required', 'array', 'min:1'],
             'highlights.*.title' => ['required', 'string', 'max:255'],
             'highlights.*.copy' => ['required', 'string'],

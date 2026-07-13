@@ -22,9 +22,6 @@ interface EditableHighlight {
 
 const toastStore = useToastStore()
 
-const siteName = ref('')
-const headline = ref('')
-const intro = ref('')
 const highlights = ref<EditableHighlight[]>([])
 const carouselImages = ref<HomepageImage[]>([])
 const availableImages = ref<HomepageImage[]>([])
@@ -68,9 +65,6 @@ async function loadHomepage() {
   try {
     const content = await getAdminHomepage()
 
-    siteName.value = content.site_name
-    headline.value = content.headline
-    intro.value = content.intro
     highlights.value = content.highlights.map((highlight) => ({
       title: highlight.title,
       copy: highlight.copy,
@@ -95,9 +89,6 @@ async function saveHomepage() {
 
   try {
     const updated = await updateHomepage({
-      site_name: siteName.value.trim(),
-      headline: headline.value.trim(),
-      intro: intro.value.trim(),
       highlights: highlights.value.map((highlight) => ({
         title: highlight.title.trim(),
         copy: highlight.copy.trim(),
@@ -105,9 +96,6 @@ async function saveHomepage() {
       carousel_image_ids: carouselImages.value.map((image) => image.id),
     })
 
-    siteName.value = updated.site_name
-    headline.value = updated.headline
-    intro.value = updated.intro
     highlights.value = updated.highlights.map((highlight) => ({
       title: highlight.title,
       copy: highlight.copy,
@@ -122,11 +110,6 @@ async function saveHomepage() {
 }
 
 function isValidHomepage() {
-  if (!siteName.value.trim() || !headline.value.trim() || !intro.value.trim()) {
-    formError.value = 'Site name, headline, and intro are required.'
-    return false
-  }
-
   if (highlights.value.length === 0) {
     formError.value = 'Add at least one highlight.'
     return false
@@ -366,13 +349,6 @@ function replaceImage(updatedImage: HomepageImage) {
 
     <form v-else class="editor-layout" novalidate @submit.prevent="saveHomepage">
       <p v-if="formError" class="form-error" role="alert">{{ formError }}</p>
-
-      <section class="editor-panel" aria-labelledby="hero-content-title">
-        <h2 id="hero-content-title">Hero Content</h2>
-        <AuthTextField id="homepage-site-name" v-model="siteName" label="Site name" />
-        <AuthTextField id="homepage-headline" v-model="headline" label="Headline" />
-        <AppTextarea id="homepage-intro" v-model="intro" label="Intro" :rows="5" />
-      </section>
 
       <section class="editor-panel" aria-labelledby="highlights-title">
         <div class="panel-heading">

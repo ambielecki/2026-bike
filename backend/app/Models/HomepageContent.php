@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['site_name', 'headline', 'intro', 'highlights'])]
+#[Fillable(['highlights'])]
 class HomepageContent extends Model
 {
     use HasFactory;
@@ -29,9 +29,6 @@ class HomepageContent extends Model
     public static function defaults(): array
     {
         return [
-            'site_name' => 'ShowMyRides',
-            'headline' => 'Track every mountain bike route worth riding twice.',
-            'intro' => 'Keep a clean record of the trails you ride, remember the lines you liked, and build a personal map of every loop, climb, and descent.',
             'highlights' => [
                 [
                     'title' => 'Save routes that matter',

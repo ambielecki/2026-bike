@@ -36,9 +36,6 @@ class HomepageController extends Controller
         $content = $this->content();
 
         $content->update([
-            'site_name' => $validated['site_name'],
-            'headline' => $validated['headline'],
-            'intro' => $validated['intro'],
             'highlights' => collect($validated['highlights'])
                 ->values()
                 ->map(fn (array $highlight, int $index): array => [
@@ -78,9 +75,6 @@ class HomepageController extends Controller
 
         return [
             'id' => $content->id,
-            'site_name' => $content->site_name,
-            'headline' => $content->headline,
-            'intro' => $content->intro,
             'highlights' => collect($content->highlights ?? [])
                 ->sortBy('sort_order')
                 ->values()

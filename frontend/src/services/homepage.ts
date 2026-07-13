@@ -20,9 +20,6 @@ export interface HomepageImage {
 
 export interface HomepageContent {
   id: number
-  site_name: string
-  headline: string
-  intro: string
   highlights: HomepageHighlight[]
   carousel_images: HomepageImage[]
 }
@@ -32,9 +29,6 @@ export interface AdminHomepageContent extends HomepageContent {
 }
 
 export interface UpdateHomepagePayload {
-  site_name: string
-  headline: string
-  intro: string
   highlights: Array<{
     title: string
     copy: string
@@ -48,27 +42,7 @@ interface ApiData<T> {
 
 export const defaultHomepageContent: HomepageContent = {
   id: 0,
-  site_name: 'ShowMyRides',
-  headline: 'Track every mountain bike route worth riding twice.',
-  intro:
-    'Keep a clean record of the trails you ride, remember the lines you liked, and build a personal map of every loop, climb, and descent.',
-  highlights: [
-    {
-      title: 'Save routes that matter',
-      copy: 'Keep your favorite climbs, descents, and loops in one place instead of digging through old ride files.',
-      sort_order: 0,
-    },
-    {
-      title: 'Add context to each ride',
-      copy: 'Capture conditions, difficulty, and trail notes so the next outing starts with better information.',
-      sort_order: 1,
-    },
-    {
-      title: 'Build your own trail map',
-      copy: 'Turn repeated rides into a personal map of where you have been and where you want to ride next.',
-      sort_order: 2,
-    },
-  ],
+  highlights: [],
   carousel_images: [],
 }
 
