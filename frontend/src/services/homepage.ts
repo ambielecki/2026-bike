@@ -46,6 +46,10 @@ export const defaultHomepageContent: HomepageContent = {
   carousel_images: [],
 }
 
+export function homepageHeroImageUrl() {
+  return `${apiBaseUrl()}/api/homepage/hero-image`
+}
+
 export async function getHomepage() {
   const response = await api.get<ApiData<HomepageContent>>('/api/homepage')
 
@@ -100,4 +104,8 @@ export async function updateHomepageImage(
 
 export async function deleteHomepageImage(id: number) {
   await api.delete<void>(`/api/admin/images/${id}`)
+}
+
+function apiBaseUrl() {
+  return import.meta.env.VITE_API_URL?.replace(/\/$/, '') ?? ''
 }

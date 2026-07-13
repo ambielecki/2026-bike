@@ -19,6 +19,7 @@ Route::get('/health', function () {
 });
 
 Route::get('/homepage', [HomepageController::class, 'show']);
+Route::get('/homepage/hero-image', [HomepageController::class, 'heroImage']);
 
 Route::get('/user', function (Request $request) {
     return $request->user();

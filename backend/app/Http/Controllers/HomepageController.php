@@ -6,6 +6,8 @@ use App\Http\Requests\UpdateHomepageContentRequest;
 use App\Models\HomepageContent;
 use App\Models\Image;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
 
 class HomepageController extends Controller
 {
@@ -14,6 +16,19 @@ class HomepageController extends Controller
         return response()->json([
             'data' => $this->homepageData($this->content()),
         ]);
+    }
+
+    public function heroImage(): RedirectResponse|Response
+    {
+        $image = $this->content()
+            ->carouselImages()
+            ->first();
+
+        if (! $image instanceof Image) {
+            return response('', Response::HTTP_NO_CONTENT);
+        }
+
+        return redirect($image->urls()['large']);
     }
 
     public function adminShow(): JsonResponse

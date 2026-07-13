@@ -27,6 +27,37 @@ class HomepageEndpointsTest extends TestCase
             ->assertJsonPath('data.carousel_images', []);
     }
 
+    public function test_public_homepage_hero_image_endpoint_returns_no_content_without_images(): void
+    {
+        $response = $this->get('/api/homepage/hero-image');
+
+        $response->assertNoContent();
+    }
+
+    public function test_public_homepage_hero_image_endpoint_redirects_to_first_carousel_image(): void
+    {
+        $content = HomepageContent::query()->create(HomepageContent::defaults());
+        $firstImage = Image::factory()->create([
+            'name' => 'first-trail.jpg',
+            'has_sizes' => true,
+        ]);
+        $secondImage = Image::factory()->create([
+            'name' => 'second-trail.jpg',
+            'has_sizes' => true,
+        ]);
+
+        $content->carouselImages()->attach($secondImage->id, [
+            'sort_order' => 1,
+        ]);
+        $content->carouselImages()->attach($firstImage->id, [
+            'sort_order' => 0,
+        ]);
+
+        $response = $this->get('/api/homepage/hero-image');
+
+        $response->assertRedirect($firstImage->urls()['large']);
+    }
+
     public function test_guest_cannot_view_admin_homepage(): void
     {
         $response = $this->getJson('/api/admin/homepage');

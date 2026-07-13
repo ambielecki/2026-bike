@@ -12,6 +12,7 @@ vi.mock('@/services/homepage', () => ({
     carousel_images: [],
   },
   getHomepage: vi.fn(),
+  homepageHeroImageUrl: vi.fn(() => '/api/homepage/hero-image'),
 }))
 
 const mockedGetHomepage = vi.mocked(getHomepage)
@@ -88,7 +89,7 @@ describe('HomeView', () => {
     expect(wrapper.text()).toContain('No homepage images selected.')
   })
 
-  it('lazy loads carousel images when content includes images', async () => {
+  it('prioritizes the first carousel image when content includes images', async () => {
     mockedGetHomepage.mockResolvedValue({
       id: 1,
       highlights: [],
@@ -113,8 +114,9 @@ describe('HomeView', () => {
 
     const image = wrapper.get('.carousel-image')
 
-    expect(image.attributes('src')).toBe('/storage/homepage/images/large/trail.jpg')
+    expect(image.attributes('src')).toBe('/api/homepage/hero-image')
     expect(image.attributes('alt')).toBe('Mountain trail overlook')
-    expect(image.attributes('loading')).toBe('lazy')
+    expect(image.attributes('loading')).toBeUndefined()
+    expect(image.attributes('fetchpriority')).toBe('high')
   })
 })

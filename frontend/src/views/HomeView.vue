@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from 'vue'
 import {
   defaultHomepageContent,
   getHomepage,
+  homepageHeroImageUrl,
   type HomepageContent,
 } from '@/services/homepage'
 
@@ -16,6 +17,13 @@ const content = ref<HomepageContent>(defaultHomepageContent)
 const activeImageIndex = ref(0)
 
 const activeImage = computed(() => content.value.carousel_images[activeImageIndex.value] ?? null)
+const activeImageUrl = computed(() => {
+  if (!activeImage.value) {
+    return undefined
+  }
+
+  return activeImageIndex.value === 0 ? homepageHeroImageUrl() : activeImage.value.urls.large
+})
 
 onMounted(() => {
   void loadHomepage()
@@ -66,9 +74,9 @@ function nextImage() {
             <template v-if="activeImage">
               <img
                 class="carousel-image"
-                :src="activeImage.urls.large"
+                :src="activeImageUrl"
                 :alt="activeImage.alt_text"
-                loading="lazy"
+                fetchpriority="high"
               />
               <div class="carousel-footer">
                 <p v-if="activeImage.description">{{ activeImage.description }}</p>
