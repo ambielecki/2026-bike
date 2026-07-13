@@ -91,5 +91,8 @@ describe('App', () => {
     expect(wrapper.text()).toContain('Register')
     expect(wrapper.text()).toContain('Log In')
     expect(wrapper.text()).toContain('Save routes that matter')
+    expect(wrapper.text()).not.toContain('ShowMyRides helps riders save bike ride details')
+    expect(wrapper.text()).toContain('© 2026 ShowMyRides. All rights reserved.')
+    expect(wrapper.get('footer a').attributes('href')).toBe('https://github.com/ambielecki/2026-bike')
   })
 })
